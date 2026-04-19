@@ -1,0 +1,2582 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Luna Messenger</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #171d24;
+        --app: #1c232c;
+        --panel: #202832;
+        --panel-2: #252f3a;
+        --line: rgba(255, 255, 255, 0.06);
+        --line-strong: rgba(255, 255, 255, 0.1);
+        --text: #e8edf3;
+        --muted: #9da8b4;
+        --muted-2: #86919d;
+        --bubble-in: #2a343f;
+        --bubble-out: #bccbda;
+        --bubble-out-text: #1a2734;
+        --button: #2a343e;
+        --button-hover: #303b46;
+        --accent: #b3c5d7;
+        --good: #8ec38b;
+        --danger: #d78989;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-width: 320px;
+        min-height: 100%;
+      }
+
+      body {
+        font-family: "Segoe UI Variable Display", "Segoe UI", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+      }
+
+      button,
+      input,
+      textarea,
+      select {
+        font: inherit;
+      }
+
+      button {
+        cursor: pointer;
+      }
+
+      .shell {
+        min-height: 100vh;
+        padding: 10px;
+      }
+
+      .auth-screen {
+        width: min(520px, 100%);
+        margin: 0 auto;
+        padding: 28px 18px;
+        display: grid;
+        align-content: center;
+        min-height: calc(100vh - 20px);
+      }
+
+      .auth-screen.hidden {
+        display: none;
+      }
+
+      .auth-card {
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: var(--app);
+      }
+
+      .auth-card__cover {
+        width: 100%;
+        height: 132px;
+        border-radius: 10px;
+        object-fit: cover;
+        object-position: center 18%;
+        display: block;
+        border: 1px solid var(--line);
+        background: #1a212a;
+      }
+
+      .auth-card__head {
+        padding: 14px 6px 8px;
+        display: grid;
+        gap: 5px;
+      }
+
+      .auth-card__title {
+        margin: 0;
+        font-size: 1.26rem;
+        font-weight: 600;
+      }
+
+      .auth-card__text {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.9rem;
+        line-height: 1.45;
+      }
+
+      .auth-tabs {
+        display: flex;
+        gap: 6px;
+        padding: 0 6px 8px;
+      }
+
+      .auth-tab {
+        flex: 1 1 0;
+        height: 38px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--button);
+        color: var(--text);
+      }
+
+      .auth-tab.is-active {
+        background: #b5c5d4;
+        color: #172633;
+        border-color: rgba(0, 0, 0, 0.06);
+      }
+
+      .auth-form {
+        padding: 0 6px 6px;
+        display: none;
+        gap: 10px;
+      }
+
+      .auth-form.is-active {
+        display: grid;
+      }
+
+      .auth-field {
+        display: grid;
+        gap: 6px;
+      }
+
+      .auth-label {
+        font-size: 0.8rem;
+        color: var(--muted);
+      }
+
+      .auth-input,
+      .modal__field,
+      .modal__select,
+      .modal__textarea,
+      .search {
+        width: 100%;
+        padding: 9px 10px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel-2);
+        color: var(--text);
+        outline: none;
+      }
+
+      .auth-input::placeholder,
+      .search::placeholder,
+      .composer__input::placeholder,
+      .modal__field::placeholder,
+      .modal__textarea::placeholder {
+        color: var(--muted-2);
+      }
+
+      .auth-actions {
+        display: flex;
+        justify-content: flex-end;
+      }
+
+      .auth-button,
+      .modal__button {
+        min-width: 110px;
+        height: 36px;
+        padding: 0 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--button);
+        color: var(--text);
+        white-space: nowrap;
+      }
+
+      .auth-button:hover,
+      .modal__button:hover {
+        background: var(--button-hover);
+      }
+
+      .auth-button--primary,
+      .modal__button--primary,
+      .tool-button--primary {
+        background: #b5c5d4;
+        color: #172633;
+        border-color: rgba(0, 0, 0, 0.06);
+      }
+
+      .auth-button--primary:hover,
+      .modal__button--primary:hover,
+      .tool-button--primary:hover {
+        background: #bfcedc;
+      }
+
+      .auth-hint {
+        margin: 0;
+        padding: 8px 10px 2px;
+        color: var(--muted);
+        font-size: 0.8rem;
+        line-height: 1.45;
+      }
+
+      .auth-hint.is-error {
+        color: #efbbbb;
+      }
+
+      .auth-hint.is-good {
+        color: #c8e3c7;
+      }
+
+      .app {
+        width: min(1380px, 100%);
+        height: min(900px, calc(100vh - 20px));
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 296px minmax(0, 1fr);
+        gap: 8px;
+        padding: 8px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: var(--app);
+      }
+
+      .app.hidden {
+        display: none;
+      }
+
+      .sidebar,
+      .chat {
+        min-height: 0;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: var(--panel);
+      }
+
+      .sidebar {
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .brand {
+        padding: 10px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .brand__cover {
+        width: 100%;
+        height: 102px;
+        display: block;
+        border-radius: 9px;
+        object-fit: cover;
+        object-position: center 18%;
+        background: #1a212a;
+        border: 1px solid var(--line);
+      }
+
+      .brand__row {
+        margin-top: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .brand__main {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        min-width: 0;
+      }
+
+      .brand__avatar {
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        object-fit: cover;
+        border: 1px solid var(--line);
+        background: #1a212a;
+      }
+
+      .brand__title {
+        margin: 0;
+        font-size: 1.04rem;
+        font-weight: 600;
+      }
+
+      .brand__meta {
+        margin: 2px 0 0;
+        color: var(--muted);
+        font-size: 0.76rem;
+      }
+
+      .tool-button {
+        width: 34px;
+        height: 34px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--button);
+        color: var(--text);
+      }
+
+      .tool-button:hover {
+        background: var(--button-hover);
+      }
+
+      .tool-button svg {
+        width: 18px;
+        height: 18px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.85;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .tool-button--gear {
+        font-size: 16px;
+        line-height: 1;
+        font-weight: 400;
+      }
+
+      .sidebar__list {
+        min-height: 0;
+        padding: 8px;
+        overflow: auto;
+        display: grid;
+        gap: 6px;
+        align-content: start;
+      }
+
+      .sidebar__hint {
+        margin: 0;
+        padding: 4px 2px 2px;
+        color: var(--muted);
+        font-size: 0.75rem;
+      }
+
+      .people-list {
+        display: grid;
+        gap: 6px;
+      }
+
+      .chat-card {
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.015);
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 10px;
+        text-align: left;
+        color: inherit;
+      }
+
+      .chat-card.is-active {
+        border-color: rgba(179, 197, 215, 0.24);
+        background: rgba(179, 197, 215, 0.08);
+      }
+
+      .chat-card__avatar {
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        object-fit: cover;
+        border: 1px solid var(--line);
+        background: #1a212a;
+      }
+
+      .chat-card__name {
+        margin: 0;
+        font-size: 0.95rem;
+        font-weight: 600;
+      }
+
+      .chat-card__meta,
+      .chat-card__time {
+        margin: 2px 0 0;
+        font-size: 0.77rem;
+        color: var(--muted);
+      }
+
+      .chat-card__badge {
+        margin-top: 4px;
+        min-width: 20px;
+        padding: 3px 6px;
+        display: inline-block;
+        text-align: center;
+        border-radius: 999px;
+        background: rgba(179, 197, 215, 0.12);
+        color: var(--text);
+        font-size: 0.7rem;
+      }
+
+      .people-empty {
+        padding: 12px 10px;
+        border: 1px dashed var(--line);
+        border-radius: 10px;
+        color: var(--muted);
+        font-size: 0.82rem;
+        line-height: 1.45;
+      }
+
+      .chat {
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        overflow: hidden;
+      }
+
+      .chat__header {
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        background: var(--panel-2);
+      }
+
+      .chat__header-main {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+      }
+
+      .chat__header-avatar-button {
+        width: 42px;
+        height: 42px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        flex: 0 0 auto;
+      }
+
+      .chat__header-avatar-button.is-clickable {
+        cursor: pointer;
+      }
+
+      .chat__header-avatar {
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        object-fit: cover;
+        border: 1px solid var(--line);
+        background: #1a212a;
+      }
+
+      .chat__header-title {
+        margin: 0;
+        font-size: 0.98rem;
+        font-weight: 600;
+      }
+
+      .chat__header-status {
+        margin: 1px 0 0;
+        font-size: 0.78rem;
+        color: var(--muted);
+      }
+
+      .chat__actions {
+        display: flex;
+        gap: 7px;
+      }
+
+      .messages {
+        min-height: 0;
+        padding: 10px 12px 8px;
+        overflow: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .date-chip {
+        align-self: center;
+        padding: 5px 8px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.02);
+        color: var(--muted);
+        font-size: 0.69rem;
+      }
+
+      .empty-chat {
+        margin: auto;
+        max-width: 360px;
+        text-align: center;
+        color: var(--muted);
+        font-size: 0.9rem;
+        line-height: 1.5;
+      }
+
+      .message {
+        max-width: min(470px, 84%);
+        padding: 8px 10px 7px;
+        border-radius: 10px;
+      }
+
+      .message--incoming {
+        align-self: flex-start;
+        background: var(--bubble-in);
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        border-radius: 7px 10px 10px 10px;
+      }
+
+      .message--outgoing {
+        align-self: flex-end;
+        background: var(--bubble-out);
+        color: var(--bubble-out-text);
+        border: 1px solid rgba(0, 0, 0, 0.04);
+        border-radius: 10px 7px 9px 10px;
+      }
+
+      .message--narrow {
+        max-width: min(220px, 66%);
+      }
+
+      .message--mid {
+        max-width: min(330px, 74%);
+      }
+
+      .message--wide {
+        max-width: min(470px, 82%);
+      }
+
+      .message__text {
+        margin: 0;
+        font-size: 0.9rem;
+        line-height: 1.32;
+        white-space: pre-wrap;
+      }
+
+      .message__meta {
+        margin-top: 4px;
+        font-size: 0.69rem;
+        opacity: 0.58;
+        text-align: right;
+      }
+
+      .message__media {
+        display: block;
+        max-width: min(280px, 100%);
+        margin: 0 0 8px;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        overflow: hidden;
+      }
+
+      .message__media img,
+      .message__media video {
+        width: 100%;
+        display: block;
+      }
+
+      .message__voice {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .message__voice-bar {
+        flex: 1 1 auto;
+        height: 6px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.12);
+      }
+
+      .message__voice-time {
+        font-size: 0.78rem;
+        opacity: 0.7;
+      }
+
+      .chat__notice {
+        margin: 0 12px;
+        padding: 9px 10px;
+        border-top: 1px solid var(--line);
+        background: rgba(215, 137, 137, 0.08);
+        color: #e5c3c3;
+        font-size: 0.78rem;
+      }
+
+      .composer__input:disabled,
+      .tool-button:disabled,
+      .tool-button--primary:disabled,
+      .auth-button:disabled {
+        opacity: 0.45;
+        cursor: default;
+      }
+
+      .composer {
+        padding: 8px 10px 10px;
+        border-top: 1px solid var(--line);
+        background: var(--panel-2);
+      }
+
+      .composer__form {
+        display: grid;
+        grid-template-columns: auto 1fr auto auto;
+        gap: 6px;
+        align-items: center;
+        padding: 6px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.015);
+      }
+
+      .composer__input {
+        min-width: 0;
+        padding: 3px 2px;
+        border: 0;
+        outline: none;
+        background: transparent;
+        color: var(--text);
+        font-size: 0.92rem;
+      }
+
+      .composer__hint {
+        margin: 6px 2px 0;
+        color: var(--muted);
+        font-size: 0.72rem;
+      }
+
+      .composer__hint.is-error {
+        color: #efbbbb;
+      }
+
+      .composer__hint.is-good {
+        color: #c8e3c7;
+      }
+
+      .modal-layer {
+        position: fixed;
+        inset: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 18px;
+        background: rgba(8, 11, 14, 0.72);
+      }
+
+      .modal-layer.is-open {
+        display: flex;
+      }
+
+      .modal {
+        width: min(560px, 100%);
+        max-height: min(760px, calc(100vh - 36px));
+        overflow: auto;
+        border: 1px solid var(--line-strong);
+        border-radius: 12px;
+        background: #212b35;
+      }
+
+      .modal__header {
+        padding: 12px 14px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .modal__title {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 600;
+      }
+
+      .modal__body {
+        padding: 12px 14px 14px;
+        display: grid;
+        gap: 12px;
+      }
+
+      .modal__section {
+        display: grid;
+        gap: 8px;
+      }
+
+      .modal__label {
+        font-size: 0.8rem;
+        color: var(--muted);
+      }
+
+      .modal__textarea {
+        min-height: 88px;
+        resize: vertical;
+      }
+
+      .modal__grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .modal__profile {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 12px;
+        align-items: center;
+        padding: 10px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.02);
+      }
+
+      .modal__profile-avatar {
+        width: 58px;
+        height: 58px;
+        border-radius: 12px;
+        object-fit: cover;
+        border: 1px solid var(--line);
+        background: #1a212a;
+      }
+
+      .modal__profile-name {
+        margin: 0;
+        font-size: 0.96rem;
+        font-weight: 600;
+      }
+
+      .modal__profile-meta {
+        margin: 3px 0 0;
+        color: var(--muted);
+        font-size: 0.78rem;
+      }
+
+      .modal__row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .modal__toggle {
+        width: 42px;
+        height: 42px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #2a343e;
+        color: var(--text);
+      }
+
+      .modal__toggle.is-on {
+        border-color: rgba(142, 195, 139, 0.35);
+        color: #d4ead2;
+      }
+
+      .modal__toggle svg {
+        width: 18px;
+        height: 18px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.9;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .modal__range {
+        width: 100%;
+      }
+
+      .modal__value {
+        min-width: 42px;
+        text-align: right;
+        color: var(--muted);
+        font-size: 0.8rem;
+      }
+
+      .modal__footer {
+        padding: 0 14px 14px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .modal__text {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.84rem;
+        line-height: 1.4;
+      }
+
+      .modal__actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .modal__status {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.78rem;
+        line-height: 1.4;
+      }
+
+      .modal__card {
+        padding: 10px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.02);
+        display: grid;
+        gap: 8px;
+      }
+
+      .modal__card-title {
+        margin: 0;
+        font-size: 0.84rem;
+        font-weight: 600;
+      }
+
+      .modal__stack {
+        display: grid;
+        gap: 8px;
+      }
+
+      .modal__danger {
+        background: rgba(215, 137, 137, 0.14);
+        border-color: rgba(215, 137, 137, 0.25);
+        color: #f0d0d0;
+      }
+
+      .modal__danger:hover {
+        background: rgba(215, 137, 137, 0.2);
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      @media (max-width: 920px) {
+        .app {
+          height: auto;
+          min-height: calc(100vh - 20px);
+          grid-template-columns: 1fr;
+        }
+
+        .sidebar {
+          order: 2;
+        }
+
+        .chat {
+          order: 1;
+          min-height: 72vh;
+        }
+      }
+
+      @media (max-width: 620px) {
+        .shell {
+          padding: 8px;
+        }
+
+        .auth-screen {
+          min-height: calc(100vh - 16px);
+          padding: 12px 0;
+        }
+
+        .app {
+          padding: 6px;
+          gap: 6px;
+          min-height: calc(100vh - 16px);
+          border-radius: 10px;
+        }
+
+        .composer__form {
+          grid-template-columns: auto 1fr auto auto;
+        }
+
+        .modal__grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <section class="auth-screen" id="auth-screen" aria-label="Вход в Luna">
+        <div class="auth-card">
+          <img class="auth-card__cover" src="LunaPhoto/image.png" alt="Luna" />
+
+          <div class="auth-card__head">
+            <h1 class="auth-card__title">Luna</h1>
+            <p class="auth-card__text">Вход по почте и паролю. После регистрации создается ник, по которому тебя можно будет найти.</p>
+          </div>
+
+          <div class="auth-tabs">
+            <button class="auth-tab is-active" type="button" data-auth-tab="login">Вход</button>
+            <button class="auth-tab" type="button" data-auth-tab="register">Регистрация</button>
+          </div>
+
+          <form class="auth-form is-active" id="login-form">
+            <div class="auth-field">
+              <label class="auth-label" for="login-email">Почта</label>
+              <input class="auth-input" id="login-email" type="email" autocomplete="email" placeholder="name@mail.com" required />
+            </div>
+
+            <div class="auth-field">
+              <label class="auth-label" for="login-password">Пароль</label>
+              <input class="auth-input" id="login-password" type="password" autocomplete="current-password" placeholder="Минимум 6 символов" required />
+            </div>
+
+            <div class="auth-actions">
+              <button class="auth-button auth-button--primary" id="login-submit" type="submit">Войти</button>
+            </div>
+          </form>
+
+          <form class="auth-form" id="register-form">
+            <div class="auth-field">
+              <label class="auth-label" for="register-email">Почта</label>
+              <input class="auth-input" id="register-email" type="email" autocomplete="email" placeholder="name@mail.com" required />
+            </div>
+
+            <div class="auth-field">
+              <label class="auth-label" for="register-username">Ник</label>
+              <input class="auth-input" id="register-username" type="text" autocomplete="username" placeholder="например: cayd" required />
+            </div>
+
+            <div class="auth-field">
+              <label class="auth-label" for="register-name">Имя</label>
+              <input class="auth-input" id="register-name" type="text" autocomplete="name" placeholder="Как тебя показывать" required />
+            </div>
+
+            <div class="auth-field">
+              <label class="auth-label" for="register-password">Пароль</label>
+              <input class="auth-input" id="register-password" type="password" autocomplete="new-password" placeholder="Минимум 6 символов" required />
+            </div>
+
+            <div class="auth-actions">
+              <button class="auth-button auth-button--primary" id="register-submit" type="submit">Создать</button>
+            </div>
+          </form>
+
+          <p class="auth-hint" id="auth-hint">Сначала включи в Firebase: Authentication, Firestore и Storage.</p>
+        </div>
+      </section>
+
+      <section class="app hidden" id="app" aria-label="Luna Messenger">
+        <aside class="sidebar">
+          <header class="brand">
+            <img class="brand__cover" src="LunaPhoto/image.png" alt="Обложка Luna" />
+            <div class="brand__row">
+              <div class="brand__main">
+                <img class="brand__avatar" id="brand-avatar" src="LunaPhoto/image.png" alt="Профиль" />
+                <div>
+                  <h1 class="brand__title">Luna</h1>
+                  <p class="brand__meta" id="brand-meta">Не в сети</p>
+                </div>
+              </div>
+              <button class="tool-button tool-button--gear" id="open-settings" type="button" aria-label="Настройки">
+                <span aria-hidden="true">⚙</span>
+              </button>
+            </div>
+          </header>
+
+          <div class="sidebar__list">
+            <input class="search" id="people-search" type="text" placeholder="Поиск по нику или имени" aria-label="Поиск пользователей" />
+            <p class="sidebar__hint" id="search-hint">Начни вводить ник или имя. Пока показываются найденные люди.</p>
+            <div class="people-list" id="people-list"></div>
+          </div>
+        </aside>
+
+        <section class="chat" aria-label="Чат">
+          <header class="chat__header">
+            <div class="chat__header-main">
+              <button class="chat__header-avatar-button" id="open-contact-avatar" type="button" aria-label="Открыть профиль">
+                <img class="chat__header-avatar" id="header-avatar" src="LunaPhoto/image.png" alt="Профиль собеседника" />
+              </button>
+              <div>
+                <h2 class="chat__header-title" id="header-title">Выбери человека</h2>
+                <p class="chat__header-status" id="chat-status">Поиск слева. Пока чат без реальной синхронизации сообщений.</p>
+              </div>
+            </div>
+
+            <div class="chat__actions">
+              <button class="tool-button" id="start-call" type="button" aria-label="Позвонить" disabled>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M5.5 4.5h3l1.5 4-2 1.5a15.4 15.4 0 0 0 6 6l1.5-2 4 1.5v3A1.5 1.5 0 0 1 18 20C10.27 20 4 13.73 4 6A1.5 1.5 0 0 1 5.5 4.5z"></path>
+                </svg>
+              </button>
+              <button class="tool-button" id="start-video" type="button" aria-label="Видеозвонок" disabled>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <rect x="3.5" y="6.5" width="12" height="11" rx="2.5"></rect>
+                  <path d="M15.5 10.2l5-2.8v9.2l-5-2.8"></path>
+                </svg>
+              </button>
+            </div>
+          </header>
+
+          <div class="messages" id="messages">
+            <div class="empty-chat" id="empty-chat">Слева выбери человека. После выбора можно писать, кидать фото и видео. Ответ пока тестовый.</div>
+          </div>
+
+          <div class="chat__notice hidden" id="blocked-notice">Вы заблокировали этого пользователя. Сообщения и звонки недоступны.</div>
+
+          <footer class="composer">
+            <form class="composer__form" id="composer">
+              <button class="tool-button" id="toggle-record" type="button" aria-label="Голосовое" disabled>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 4a3 3 0 0 1 3 3v4a3 3 0 1 1-6 0V7a3 3 0 0 1 3-3z"></path>
+                  <path d="M6 10.5a6 6 0 0 0 12 0"></path>
+                  <path d="M12 16.5V20"></path>
+                  <path d="M9 20h6"></path>
+                </svg>
+              </button>
+
+              <label class="hidden" for="message-input">Сообщение</label>
+              <input
+                class="composer__input"
+                id="message-input"
+                name="message"
+                type="text"
+                autocomplete="off"
+                placeholder="Написать сообщение"
+                disabled
+              />
+
+              <input class="hidden" id="file-input" type="file" accept="image/*,video/*" />
+              <button class="tool-button" id="attach-file" type="button" aria-label="Прикрепить файл" disabled>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M8.5 12.5l6.8-6.8a3 3 0 1 1 4.2 4.2l-8.4 8.4a5 5 0 0 1-7.1-7.1l8.1-8.1"></path>
+                </svg>
+              </button>
+
+              <button class="tool-button tool-button--primary" id="send-button" type="submit" aria-label="Отправить" disabled>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M4 12.2l15.5-7.2-3.1 14L11.4 13l-7.4-.8z"></path>
+                  <path d="M11.4 13L19.5 5"></path>
+                </svg>
+              </button>
+            </form>
+
+            <p class="composer__hint" id="composer-hint">Сначала выбери человека слева.</p>
+          </footer>
+        </section>
+      </section>
+    </main>
+
+    <div class="modal-layer" id="settings-layer" aria-hidden="true">
+      <section class="modal" aria-label="Настройки профиля">
+        <header class="modal__header">
+          <h2 class="modal__title">Профиль и устройства</h2>
+          <button class="tool-button" data-close="settings-layer" type="button" aria-label="Закрыть настройки">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M6 6l12 12"></path>
+              <path d="M18 6L6 18"></path>
+            </svg>
+          </button>
+        </header>
+
+        <div class="modal__body">
+          <section class="modal__profile">
+            <img class="modal__profile-avatar" id="profile-preview-avatar" src="LunaPhoto/image.png" alt="Аватар профиля" />
+            <div>
+              <p class="modal__profile-name" id="profile-preview-name">Вы</p>
+              <p class="modal__profile-meta" id="profile-preview-meta">@you · без описания</p>
+            </div>
+          </section>
+
+          <section class="modal__section">
+            <label class="modal__label" for="profile-username">Юзернейм</label>
+            <input class="modal__field" id="profile-username" type="text" value="you" />
+          </section>
+
+          <section class="modal__section">
+            <label class="modal__label" for="profile-name">Имя</label>
+            <input class="modal__field" id="profile-name" type="text" value="Вы" />
+          </section>
+
+          <section class="modal__section">
+            <label class="modal__label" for="profile-avatar">Аватар</label>
+            <input class="modal__field" id="profile-avatar" type="text" value="LunaPhoto/image.png" />
+          </section>
+
+          <section class="modal__section">
+            <label class="modal__label" for="profile-about">Описание профиля</label>
+            <textarea class="modal__textarea" id="profile-about">без описания</textarea>
+          </section>
+
+          <section class="modal__section">
+            <label class="modal__label">Доступ к устройствам</label>
+            <div class="modal__actions">
+              <button class="modal__button" id="request-devices" type="button">Разрешить устройства</button>
+              <button class="modal__button" id="refresh-devices" type="button">Обновить список</button>
+            </div>
+            <p class="modal__status" id="device-permission-status">Доступ к микрофону и списку устройств ещё не запрошен.</p>
+          </section>
+
+          <section class="modal__grid">
+            <div class="modal__section">
+              <label class="modal__label" for="settings-input-device">Микрофон</label>
+              <select class="modal__select" id="settings-input-device">
+                <option value="">Сначала дайте доступ</option>
+              </select>
+            </div>
+
+            <div class="modal__section">
+              <label class="modal__label" for="settings-output-device">Вывод звука</label>
+              <select class="modal__select" id="settings-output-device">
+                <option value="">Сначала дайте доступ</option>
+              </select>
+            </div>
+          </section>
+        </div>
+
+        <footer class="modal__footer">
+          <button class="modal__button" id="logout-button" type="button">Выйти</button>
+          <button class="modal__button" data-close="settings-layer" type="button">Закрыть</button>
+          <button class="modal__button modal__button--primary" id="save-settings" type="button">Сохранить</button>
+        </footer>
+      </section>
+    </div>
+
+    <div class="modal-layer" id="call-layer" aria-hidden="true">
+      <section class="modal" aria-label="Звонок">
+        <header class="modal__header">
+          <div>
+            <h2 class="modal__title" id="call-title">Голосовой звонок</h2>
+            <p class="chat__header-status" id="call-subtitle">Выберите человека</p>
+          </div>
+          <button class="tool-button" data-close="call-layer" type="button" aria-label="Закрыть звонок">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M6 6l12 12"></path>
+              <path d="M18 6L6 18"></path>
+            </svg>
+          </button>
+        </header>
+
+        <div class="modal__body">
+          <section class="modal__profile">
+            <img class="modal__profile-avatar" id="call-avatar" src="LunaPhoto/image.png" alt="Аватар собеседника" />
+            <div>
+              <p class="modal__profile-name" id="call-contact-name">Нет собеседника</p>
+              <p class="modal__profile-meta" id="call-timer">00:00</p>
+            </div>
+          </section>
+
+          <section class="modal__grid">
+            <section class="modal__card modal__stack">
+              <p class="modal__card-title">Микрофон</p>
+              <button class="modal__toggle" id="toggle-call-mic" type="button" aria-label="Микрофон включен">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 4a3 3 0 0 1 3 3v4a3 3 0 1 1-6 0V7a3 3 0 0 1 3-3z"></path>
+                  <path d="M6 10.5a6 6 0 0 0 12 0"></path>
+                  <path d="M12 16.5V20"></path>
+                  <path d="M9 20h6"></path>
+                </svg>
+              </button>
+              <label class="modal__label" for="call-input-device">Текущее устройство</label>
+              <select class="modal__select" id="call-input-device">
+                <option value="">Сначала дайте доступ</option>
+              </select>
+            </section>
+
+            <section class="modal__card modal__stack">
+              <p class="modal__card-title">Вывод</p>
+              <button class="modal__toggle" id="toggle-call-output" type="button" aria-label="Вывод звука включен">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M4 12V8.5A2.5 2.5 0 0 1 6.5 6h1.7l2.8-2.4A1 1 0 0 1 12.7 4v16a1 1 0 0 1-1.7.4L8.2 18H6.5A2.5 2.5 0 0 1 4 15.5V12z"></path>
+                  <path d="M16 8.5a5 5 0 0 1 0 7"></path>
+                  <path d="M18.5 6a8.5 8.5 0 0 1 0 12"></path>
+                </svg>
+              </button>
+              <label class="modal__label" for="call-output-device">Куда выводить звук</label>
+              <select class="modal__select" id="call-output-device">
+                <option value="">Сначала дайте доступ</option>
+              </select>
+              <label class="modal__label" for="output-volume">Громкость вывода</label>
+              <div class="modal__row">
+                <input class="modal__range" id="output-volume" type="range" min="0" max="100" value="68" />
+                <span class="modal__value" id="output-volume-value">68%</span>
+              </div>
+              <p class="modal__status" id="call-device-status">После разрешения браузера здесь появятся реальные микрофоны и доступные устройства вывода.</p>
+            </section>
+          </section>
+
+          <section class="modal__section modal__card">
+            <p class="modal__card-title">Собеседник</p>
+            <label class="modal__label" for="remote-volume">Громкость собеседника</label>
+            <div class="modal__row">
+              <input class="modal__range" id="remote-volume" type="range" min="0" max="100" value="76" />
+              <span class="modal__value" id="remote-volume-value">76%</span>
+            </div>
+          </section>
+        </div>
+
+        <footer class="modal__footer">
+          <button class="modal__button" data-close="call-layer" type="button">Закрыть</button>
+        </footer>
+      </section>
+    </div>
+
+    <div class="modal-layer" id="contact-layer" aria-hidden="true">
+      <section class="modal" aria-label="Профиль пользователя">
+        <header class="modal__header">
+          <h2 class="modal__title">Профиль</h2>
+          <button class="tool-button" data-close="contact-layer" type="button" aria-label="Закрыть профиль">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M6 6l12 12"></path>
+              <path d="M18 6L6 18"></path>
+            </svg>
+          </button>
+        </header>
+
+        <div class="modal__body">
+          <section class="modal__profile">
+            <img class="modal__profile-avatar" id="contact-avatar" src="LunaPhoto/image.png" alt="Аватар пользователя" />
+            <div>
+              <p class="modal__profile-name" id="contact-name">Не выбран</p>
+              <p class="modal__profile-meta" id="contact-meta">@ник · не выбран</p>
+            </div>
+          </section>
+
+          <section class="modal__section">
+            <label class="modal__label">Юзернейм</label>
+            <input class="modal__field" id="contact-username" type="text" value="@ник" readonly />
+          </section>
+
+          <section class="modal__section">
+            <label class="modal__label">Имя</label>
+            <input class="modal__field" id="contact-display-name" type="text" value="Не выбран" readonly />
+          </section>
+
+          <section class="modal__section">
+            <label class="modal__label">Описание</label>
+            <textarea class="modal__textarea" id="contact-about" readonly>Профиль откроется после выбора человека.</textarea>
+          </section>
+
+          <section class="modal__section">
+            <p class="modal__text" id="contact-block-status">Пользователь не заблокирован.</p>
+          </section>
+        </div>
+
+        <footer class="modal__footer">
+          <button class="modal__button" data-close="contact-layer" type="button">Закрыть</button>
+          <button class="modal__button modal__danger" id="toggle-contact-block" type="button" disabled>Заблокировать</button>
+        </footer>
+      </section>
+    </div>
+
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+      import {
+        createUserWithEmailAndPassword,
+        deleteUser,
+        getAuth,
+        onAuthStateChanged,
+        signInWithEmailAndPassword,
+        signOut
+      } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+      import {
+        collection,
+        doc,
+        endAt,
+        getDoc,
+        getDocs,
+        getFirestore,
+        limit,
+        orderBy,
+        query,
+        runTransaction,
+        setDoc,
+        startAt,
+        updateDoc
+      } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyBv7Fltdgttnu3gfYuxl3rKIwVwO8EMmAU",
+        authDomain: "luna-7d8b8.firebaseapp.com",
+        projectId: "luna-7d8b8",
+        storageBucket: "luna-7d8b8.firebasestorage.app",
+        messagingSenderId: "1011225311087",
+        appId: "1:1011225311087:web:5eaaf797bd9d68c3471a9a",
+        measurementId: "G-S7785VD9L6"
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+
+      const authScreen = document.querySelector("#auth-screen");
+      const authHint = document.querySelector("#auth-hint");
+      const authTabs = [...document.querySelectorAll("[data-auth-tab]")];
+      const loginForm = document.querySelector("#login-form");
+      const registerForm = document.querySelector("#register-form");
+      const loginSubmit = document.querySelector("#login-submit");
+      const registerSubmit = document.querySelector("#register-submit");
+      const appShell = document.querySelector("#app");
+      const peopleList = document.querySelector("#people-list");
+      const peopleSearch = document.querySelector("#people-search");
+      const searchHint = document.querySelector("#search-hint");
+      const messages = document.querySelector("#messages");
+      const emptyChat = document.querySelector("#empty-chat");
+      const composer = document.querySelector("#composer");
+      const messageInput = document.querySelector("#message-input");
+      const composerHint = document.querySelector("#composer-hint");
+      const recordButton = document.querySelector("#toggle-record");
+      const attachButton = document.querySelector("#attach-file");
+      const fileInput = document.querySelector("#file-input");
+      const settingsLayer = document.querySelector("#settings-layer");
+      const callLayer = document.querySelector("#call-layer");
+      const contactLayer = document.querySelector("#contact-layer");
+      const startCallButton = document.querySelector("#start-call");
+      const startVideoButton = document.querySelector("#start-video");
+      const openContactAvatar = document.querySelector("#open-contact-avatar");
+      const openSettingsButton = document.querySelector("#open-settings");
+      const saveSettingsButton = document.querySelector("#save-settings");
+      const logoutButton = document.querySelector("#logout-button");
+      const profileUsernameInput = document.querySelector("#profile-username");
+      const profileNameInput = document.querySelector("#profile-name");
+      const profileAvatarInput = document.querySelector("#profile-avatar");
+      const profileAboutInput = document.querySelector("#profile-about");
+      const settingsInputDevice = document.querySelector("#settings-input-device");
+      const settingsOutputDevice = document.querySelector("#settings-output-device");
+      const requestDevicesButton = document.querySelector("#request-devices");
+      const refreshDevicesButton = document.querySelector("#refresh-devices");
+      const devicePermissionStatus = document.querySelector("#device-permission-status");
+      const profilePreviewAvatar = document.querySelector("#profile-preview-avatar");
+      const profilePreviewName = document.querySelector("#profile-preview-name");
+      const profilePreviewMeta = document.querySelector("#profile-preview-meta");
+      const callTitle = document.querySelector("#call-title");
+      const callSubtitle = document.querySelector("#call-subtitle");
+      const callAvatar = document.querySelector("#call-avatar");
+      const callContactName = document.querySelector("#call-contact-name");
+      const callTimer = document.querySelector("#call-timer");
+      const toggleCallMic = document.querySelector("#toggle-call-mic");
+      const toggleCallOutput = document.querySelector("#toggle-call-output");
+      const callInputDevice = document.querySelector("#call-input-device");
+      const callOutputDevice = document.querySelector("#call-output-device");
+      const callDeviceStatus = document.querySelector("#call-device-status");
+      const remoteVolume = document.querySelector("#remote-volume");
+      const remoteVolumeValue = document.querySelector("#remote-volume-value");
+      const outputVolume = document.querySelector("#output-volume");
+      const outputVolumeValue = document.querySelector("#output-volume-value");
+      const chatStatus = document.querySelector("#chat-status");
+      const blockedNotice = document.querySelector("#blocked-notice");
+      const contactAvatar = document.querySelector("#contact-avatar");
+      const contactName = document.querySelector("#contact-name");
+      const contactMeta = document.querySelector("#contact-meta");
+      const contactUsername = document.querySelector("#contact-username");
+      const contactDisplayName = document.querySelector("#contact-display-name");
+      const contactAbout = document.querySelector("#contact-about");
+      const contactBlockStatus = document.querySelector("#contact-block-status");
+      const toggleContactBlock = document.querySelector("#toggle-contact-block");
+      const brandAvatar = document.querySelector("#brand-avatar");
+      const brandMeta = document.querySelector("#brand-meta");
+      const headerAvatar = document.querySelector("#header-avatar");
+      const headerTitle = document.querySelector("#header-title");
+      const sendButton = document.querySelector("#send-button");
+
+      const state = {
+        authReady: false,
+        profile: {
+          uid: "",
+          email: "",
+          username: "you",
+          usernameLower: "you",
+          name: "Вы",
+          nameLower: "вы",
+          avatar: "LunaPhoto/image.png",
+          about: "без описания"
+        },
+        contact: null,
+        people: [],
+        messagesByUser: {},
+        devices: {
+          input: "",
+          output: "",
+          permissionGranted: false,
+          inputs: [],
+          outputs: [],
+          outputSelectionSupported: false
+        },
+        call: {
+          type: "voice",
+          micEnabled: true,
+          outputEnabled: true,
+          remoteVolume: 76,
+          outputVolume: 68,
+          startedAt: 0,
+          timerId: 0
+        },
+        recording: false,
+        recordStartedAt: 0,
+        attachedFile: null,
+        searchTimer: 0,
+        blockedUsers: loadBlockedUsers()
+      };
+
+      function loadBlockedUsers() {
+        try {
+          const raw = localStorage.getItem("luna-blocked-users");
+          const parsed = raw ? JSON.parse(raw) : [];
+          return new Set(Array.isArray(parsed) ? parsed : []);
+        } catch {
+          return new Set();
+        }
+      }
+
+      function saveBlockedUsers() {
+        localStorage.setItem("luna-blocked-users", JSON.stringify([...state.blockedUsers]));
+      }
+
+      function normalizeUsername(value) {
+        return value.trim().toLowerCase();
+      }
+
+      function escapeHtml(value) {
+        return value
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;");
+      }
+
+      function isValidUsername(value) {
+        return /^[a-z0-9_]{4,20}$/.test(value);
+      }
+
+      function setAuthHint(text, type = "") {
+        authHint.textContent = text;
+        authHint.classList.toggle("is-error", type === "error");
+        authHint.classList.toggle("is-good", type === "good");
+      }
+
+      function setComposerHint(text, type = "") {
+        composerHint.textContent = text;
+        composerHint.classList.toggle("is-error", type === "error");
+        composerHint.classList.toggle("is-good", type === "good");
+      }
+
+      function setAuthLoading(button, loading) {
+        button.disabled = loading;
+        button.textContent = loading ? "Подожди..." : button === loginSubmit ? "Войти" : "Создать";
+      }
+
+      function openLayer(layer) {
+        layer.classList.add("is-open");
+        layer.setAttribute("aria-hidden", "false");
+      }
+
+      function closeLayer(layer) {
+        layer.classList.remove("is-open");
+        layer.setAttribute("aria-hidden", "true");
+      }
+
+      function getTime() {
+        return new Date().toLocaleTimeString("ru-RU", {
+          hour: "2-digit",
+          minute: "2-digit"
+        });
+      }
+
+      function getTodayLabel() {
+        return new Date().toLocaleDateString("ru-RU", {
+          day: "numeric",
+          month: "long"
+        });
+      }
+
+      function formatDuration(seconds) {
+        const mins = String(Math.floor(seconds / 60)).padStart(2, "0");
+        const secs = String(seconds % 60).padStart(2, "0");
+        return `${mins}:${secs}`;
+      }
+
+      function setSelectOptions(select, items, fallbackText, selectedValue) {
+        select.innerHTML = "";
+
+        if (!items.length) {
+          const option = document.createElement("option");
+          option.value = "";
+          option.textContent = fallbackText;
+          select.appendChild(option);
+          select.value = "";
+          return;
+        }
+
+        items.forEach((item, index) => {
+          const option = document.createElement("option");
+          option.value = item.deviceId;
+          option.textContent = item.label || `${fallbackText} ${index + 1}`;
+          select.appendChild(option);
+        });
+
+        const hasSelected = items.some((item) => item.deviceId === selectedValue);
+        select.value = hasSelected ? selectedValue : items[0].deviceId;
+      }
+
+      function syncDeviceStatusText() {
+        if (!state.devices.permissionGranted) {
+          devicePermissionStatus.textContent = "Доступ к микрофону и списку устройств ещё не запрошен.";
+          callDeviceStatus.textContent = "После разрешения браузера здесь появятся реальные микрофоны и доступные устройства вывода.";
+          return;
+        }
+
+        const outputNote = state.devices.outputSelectionSupported
+          ? "Выбор вывода звука поддерживается в этом браузере."
+          : "Браузер не отдал список audio output или не поддерживает выбор вывода.";
+
+        devicePermissionStatus.textContent = `Доступ получен. Найдено микрофонов: ${state.devices.inputs.length}. Найдено выводов: ${state.devices.outputs.length}. ${outputNote}`;
+        callDeviceStatus.textContent = outputNote;
+      }
+
+      function syncDeviceSelects() {
+        setSelectOptions(
+          settingsInputDevice,
+          state.devices.inputs,
+          state.devices.permissionGranted ? "Микрофон не найден" : "Сначала дайте доступ",
+          state.devices.input
+        );
+        state.devices.input = settingsInputDevice.value || "";
+        setSelectOptions(
+          callInputDevice,
+          state.devices.inputs,
+          state.devices.permissionGranted ? "Микрофон не найден" : "Сначала дайте доступ",
+          state.devices.input
+        );
+        callInputDevice.value = state.devices.input;
+
+        setSelectOptions(
+          settingsOutputDevice,
+          state.devices.outputs,
+          state.devices.permissionGranted ? "Вывод недоступен" : "Сначала дайте доступ",
+          state.devices.output
+        );
+        state.devices.output = settingsOutputDevice.value || "";
+        setSelectOptions(
+          callOutputDevice,
+          state.devices.outputs,
+          state.devices.permissionGranted ? "Вывод недоступен" : "Сначала дайте доступ",
+          state.devices.output
+        );
+        callOutputDevice.value = state.devices.output;
+
+        syncDeviceStatusText();
+      }
+
+      async function collectDevices() {
+        if (!navigator.mediaDevices?.enumerateDevices) {
+          devicePermissionStatus.textContent = "Браузер не поддерживает enumerateDevices.";
+          callDeviceStatus.textContent = "Браузер не поддерживает enumerateDevices.";
+          return;
+        }
+
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        state.devices.inputs = devices.filter((device) => device.kind === "audioinput");
+        state.devices.outputs = devices.filter((device) => device.kind === "audiooutput");
+        state.devices.outputSelectionSupported =
+          state.devices.outputs.length > 0 &&
+          typeof HTMLMediaElement !== "undefined" &&
+          "setSinkId" in HTMLMediaElement.prototype;
+        syncDeviceSelects();
+      }
+
+      async function requestDeviceAccess() {
+        if (!navigator.mediaDevices?.getUserMedia) {
+          devicePermissionStatus.textContent = "Браузер не поддерживает доступ к устройствам.";
+          callDeviceStatus.textContent = "Браузер не поддерживает доступ к устройствам.";
+          return;
+        }
+
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          stream.getTracks().forEach((track) => track.stop());
+          state.devices.permissionGranted = true;
+          await collectDevices();
+        } catch (error) {
+          state.devices.permissionGranted = false;
+          const message = error?.name === "NotAllowedError"
+            ? "Разрешение не выдано. Разрешите доступ к микрофону в браузере."
+            : "Не удалось получить доступ к устройствам.";
+          devicePermissionStatus.textContent = message;
+          callDeviceStatus.textContent = message;
+        }
+      }
+
+      function syncProfilePreview() {
+        const username = profileUsernameInput.value.trim() || "you";
+        const name = profileNameInput.value.trim() || "Вы";
+        const about = profileAboutInput.value.trim() || "без описания";
+        const avatar = profileAvatarInput.value.trim() || "LunaPhoto/image.png";
+
+        profilePreviewName.textContent = name;
+        profilePreviewMeta.textContent = `@${username} · ${about}`;
+        profilePreviewAvatar.src = avatar;
+      }
+
+      function syncHeader() {
+        if (!state.contact) {
+          headerAvatar.src = "LunaPhoto/image.png";
+          headerTitle.textContent = "Выбери человека";
+          chatStatus.textContent = "Поиск слева. Пока чат без реальной синхронизации сообщений.";
+          openContactAvatar.classList.remove("is-clickable");
+          openContactAvatar.disabled = true;
+          startCallButton.disabled = true;
+          startVideoButton.disabled = true;
+          return;
+        }
+
+        const blocked = state.blockedUsers.has(state.contact.uid);
+        headerAvatar.src = state.contact.avatar;
+        headerTitle.textContent = state.contact.name;
+        chatStatus.textContent = blocked ? "вы заблокировали пользователя" : `@${state.contact.username}`;
+        openContactAvatar.classList.add("is-clickable");
+        openContactAvatar.disabled = false;
+        startCallButton.disabled = blocked;
+        startVideoButton.disabled = blocked;
+      }
+
+      function syncBrand() {
+        brandAvatar.src = state.profile.avatar;
+        brandMeta.textContent = `@${state.profile.username}`;
+      }
+
+      function syncContactProfile() {
+        if (!state.contact) {
+          contactAvatar.src = "LunaPhoto/image.png";
+          contactName.textContent = "Не выбран";
+          contactMeta.textContent = "@ник · не выбран";
+          contactUsername.value = "@ник";
+          contactDisplayName.value = "Не выбран";
+          contactAbout.value = "Профиль откроется после выбора человека.";
+          contactBlockStatus.textContent = "Пользователь не заблокирован.";
+          toggleContactBlock.textContent = "Заблокировать";
+          toggleContactBlock.disabled = true;
+          return;
+        }
+
+        const blocked = state.blockedUsers.has(state.contact.uid);
+        const usernameText = `@${state.contact.username}`;
+        contactAvatar.src = state.contact.avatar;
+        contactName.textContent = state.contact.name;
+        contactMeta.textContent = `${usernameText} · ${blocked ? "заблокирован" : "на связи"}`;
+        contactUsername.value = usernameText;
+        contactDisplayName.value = state.contact.name;
+        contactAbout.value = state.contact.about;
+        contactBlockStatus.textContent = blocked
+          ? "Вы заблокировали этого пользователя. Сообщения и звонки отключены."
+          : "Пользователь не заблокирован.";
+        toggleContactBlock.textContent = blocked ? "Разблокировать" : "Заблокировать";
+        toggleContactBlock.disabled = false;
+      }
+
+      function applyComposerState() {
+        const blocked = state.contact ? state.blockedUsers.has(state.contact.uid) : false;
+        const enabled = Boolean(state.contact) && !blocked;
+
+        blockedNotice.classList.toggle("hidden", !blocked);
+        messageInput.disabled = !enabled;
+        recordButton.disabled = !enabled;
+        attachButton.disabled = !enabled;
+        sendButton.disabled = !enabled;
+
+        if (!state.contact) {
+          setComposerHint("Сначала выбери человека слева.");
+          return;
+        }
+
+        if (blocked) {
+          setComposerHint(`Вы заблокировали ${state.contact.name}. Сначала разблокируйте профиль.`, "error");
+          return;
+        }
+
+        if (state.attachedFile) {
+          setComposerHint(`Файл готов: ${state.attachedFile.file.name}`);
+          return;
+        }
+
+        if (state.recording) {
+          const seconds = Math.max(1, Math.round((Date.now() - state.recordStartedAt) / 1000));
+          setComposerHint(`Идёт запись: ${formatDuration(seconds)}.`);
+          return;
+        }
+
+        setComposerHint("Сообщения пока локальные. В ответ приходит TEST.");
+      }
+
+      function syncCallControls() {
+        toggleCallMic.classList.toggle("is-on", state.call.micEnabled);
+        toggleCallOutput.classList.toggle("is-on", state.call.outputEnabled);
+        toggleCallMic.setAttribute("aria-label", state.call.micEnabled ? "Микрофон включен" : "Микрофон выключен");
+        toggleCallOutput.setAttribute("aria-label", state.call.outputEnabled ? "Наушники включены" : "Наушники выключены");
+
+        if (callInputDevice.options.length) {
+          callInputDevice.value = state.devices.input || callInputDevice.value;
+        }
+        if (callOutputDevice.options.length) {
+          callOutputDevice.value = state.devices.output || callOutputDevice.value;
+        }
+
+        remoteVolume.value = String(state.call.remoteVolume);
+        outputVolume.value = String(state.call.outputVolume);
+        remoteVolumeValue.textContent = `${state.call.remoteVolume}%`;
+        outputVolumeValue.textContent = `${state.call.outputVolume}%`;
+        syncDeviceStatusText();
+      }
+
+      function stopCallTimer() {
+        if (state.call.timerId) {
+          window.clearInterval(state.call.timerId);
+          state.call.timerId = 0;
+        }
+      }
+
+      function startCallTimer() {
+        stopCallTimer();
+        state.call.startedAt = Date.now();
+        callTimer.textContent = "00:00";
+        state.call.timerId = window.setInterval(() => {
+          const seconds = Math.floor((Date.now() - state.call.startedAt) / 1000);
+          callTimer.textContent = formatDuration(seconds);
+        }, 1000);
+      }
+
+      function openCall(type) {
+        if (!state.contact) {
+          setComposerHint("Сначала выбери человека.", "error");
+          return;
+        }
+
+        if (state.blockedUsers.has(state.contact.uid)) {
+          setComposerHint(`Сначала разблокируйте ${state.contact.name}, чтобы звонить.`, "error");
+          return;
+        }
+
+        state.call.type = type;
+        callTitle.textContent = type === "video" ? "Видеозвонок" : "Голосовой звонок";
+        callSubtitle.textContent = `Вам звонят: ${state.contact.name}`;
+        callAvatar.src = state.contact.avatar;
+        callContactName.textContent = state.contact.name;
+        startCallTimer();
+        syncCallControls();
+        openLayer(callLayer);
+      }
+
+      function createDefaultMessages(contact) {
+        return [
+          {
+            type: "incoming",
+            text: `Привет. Это чат с ${contact.name}.`,
+            time: getTime()
+          }
+        ];
+      }
+
+      function ensureContactMessages(contact) {
+        if (!state.messagesByUser[contact.uid]) {
+          state.messagesByUser[contact.uid] = createDefaultMessages(contact);
+        }
+
+        return state.messagesByUser[contact.uid];
+      }
+
+      function createMessageElement(message) {
+        const item = document.createElement("article");
+        item.className = `message message--${message.type}`;
+
+        const textLength = message.text?.length ?? 0;
+        if (textLength < 24) {
+          item.classList.add("message--narrow");
+        } else if (textLength < 72) {
+          item.classList.add("message--mid");
+        } else {
+          item.classList.add("message--wide");
+        }
+
+        if (message.media) {
+          const media = document.createElement("div");
+          media.className = "message__media";
+          if (message.media.kind === "image") {
+            const image = document.createElement("img");
+            image.src = message.media.url;
+            image.alt = message.media.name || "Изображение";
+            media.appendChild(image);
+          } else if (message.media.kind === "video") {
+            const video = document.createElement("video");
+            video.src = message.media.url;
+            video.controls = true;
+            video.preload = "metadata";
+            media.appendChild(video);
+          }
+          item.appendChild(media);
+        }
+
+        if (message.voice) {
+          const voice = document.createElement("div");
+          voice.className = "message__voice";
+          voice.innerHTML = `
+            <svg viewBox="0 0 24 24" aria-hidden="true" width="18" height="18" style="fill:none;stroke:currentColor;stroke-width:1.8">
+              <path d="M12 4a3 3 0 0 1 3 3v4a3 3 0 1 1-6 0V7a3 3 0 0 1 3-3z"></path>
+              <path d="M6 10.5a6 6 0 0 0 12 0"></path>
+              <path d="M12 16.5V20"></path>
+              <path d="M9 20h6"></path>
+            </svg>
+            <div class="message__voice-bar"></div>
+            <span class="message__voice-time">${escapeHtml(message.voice.duration)}</span>
+          `;
+          item.appendChild(voice);
+        }
+
+        if (message.text) {
+          const body = document.createElement("p");
+          body.className = "message__text";
+          body.textContent = message.text;
+          item.appendChild(body);
+        }
+
+        const meta = document.createElement("div");
+        meta.className = "message__meta";
+        meta.textContent = `${message.type === "outgoing" ? state.profile.name : state.contact?.name || "Собеседник"} • ${message.time}`;
+        item.appendChild(meta);
+
+        return item;
+      }
+
+      function renderMessages() {
+        messages.innerHTML = "";
+
+        if (!state.contact) {
+          messages.appendChild(emptyChat);
+          return;
+        }
+
+        const list = ensureContactMessages(state.contact);
+        const chip = document.createElement("div");
+        chip.className = "date-chip";
+        chip.textContent = getTodayLabel();
+        messages.appendChild(chip);
+
+        list.forEach((message) => {
+          messages.appendChild(createMessageElement(message));
+        });
+
+        messages.scrollTo({
+          top: messages.scrollHeight,
+          behavior: "smooth"
+        });
+      }
+
+      function appendMessage(message) {
+        if (!state.contact) {
+          return;
+        }
+
+        const list = ensureContactMessages(state.contact);
+        list.push(message);
+        renderMessages();
+      }
+
+      function renderPeople() {
+        peopleList.innerHTML = "";
+
+        if (!state.people.length) {
+          const empty = document.createElement("div");
+          empty.className = "people-empty";
+          empty.textContent = peopleSearch.value.trim()
+            ? "Никого не найдено."
+            : "Пока тут пусто. Зарегистрируй еще один аккаунт, и он появится в поиске.";
+          peopleList.appendChild(empty);
+          return;
+        }
+
+        state.people.forEach((person) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "chat-card";
+          if (state.contact?.uid === person.uid) {
+            button.classList.add("is-active");
+          }
+
+          const blocked = state.blockedUsers.has(person.uid);
+          button.innerHTML = `
+            <img class="chat-card__avatar" src="${escapeHtml(person.avatar)}" alt="${escapeHtml(person.name)}" />
+            <div>
+              <h2 class="chat-card__name">${escapeHtml(person.name)}</h2>
+              <p class="chat-card__meta">@${escapeHtml(person.username)}${blocked ? " · заблокирован" : ""}</p>
+            </div>
+            <div>
+              <p class="chat-card__time">${blocked ? "стоп" : "чат"}</p>
+              <span class="chat-card__badge">${blocked ? "!" : "1"}</span>
+            </div>
+          `;
+          button.addEventListener("click", () => selectContact(person));
+          peopleList.appendChild(button);
+        });
+      }
+
+      function selectContact(person) {
+        state.contact = {
+          uid: person.uid,
+          username: person.username,
+          name: person.name,
+          avatar: person.avatar || "LunaPhoto/image.png",
+          about: person.about || "без описания",
+          email: person.email || ""
+        };
+
+        if (state.recording) {
+          state.recording = false;
+          recordButton.classList.remove("is-active");
+        }
+
+        state.attachedFile = null;
+        fileInput.value = "";
+        syncHeader();
+        syncContactProfile();
+        applyComposerState();
+        renderPeople();
+        renderMessages();
+      }
+
+      function switchAuthTab(name) {
+        authTabs.forEach((tab) => {
+          tab.classList.toggle("is-active", tab.dataset.authTab === name);
+        });
+        loginForm.classList.toggle("is-active", name === "login");
+        registerForm.classList.toggle("is-active", name === "register");
+      }
+
+      function makeProfilePayload({ uid, email, username, name, avatar, about }) {
+        return {
+          uid,
+          email,
+          username,
+          usernameLower: normalizeUsername(username),
+          name,
+          nameLower: name.trim().toLowerCase(),
+          avatar: avatar || "LunaPhoto/image.png",
+          about: about || "без описания",
+          updatedAt: new Date().toISOString()
+        };
+      }
+
+      async function reserveUsernameAndCreateProfile(user, formData) {
+        const username = normalizeUsername(formData.username);
+        const profileRef = doc(db, "users", user.uid);
+        const usernameRef = doc(db, "usernames", username);
+        const payload = makeProfilePayload({
+          uid: user.uid,
+          email: user.email || formData.email,
+          username,
+          name: formData.name.trim(),
+          avatar: "LunaPhoto/image.png",
+          about: "без описания"
+        });
+
+        await runTransaction(db, async (transaction) => {
+          const usernameSnap = await transaction.get(usernameRef);
+          if (usernameSnap.exists()) {
+            throw new Error("username-taken");
+          }
+
+          transaction.set(usernameRef, {
+            uid: user.uid,
+            username
+          });
+          transaction.set(profileRef, {
+            ...payload,
+            createdAt: new Date().toISOString()
+          });
+        });
+      }
+
+      async function ensureOwnProfile(user) {
+        const profileRef = doc(db, "users", user.uid);
+        const profileSnap = await getDoc(profileRef);
+
+        if (profileSnap.exists()) {
+          return profileSnap.data();
+        }
+
+        const fallbackUsername = normalizeUsername((user.email || "user").split("@")[0]).replace(/[^a-z0-9_]/g, "").slice(0, 20) || `user${user.uid.slice(0, 6).toLowerCase()}`;
+        const payload = makeProfilePayload({
+          uid: user.uid,
+          email: user.email || "",
+          username: fallbackUsername,
+          name: user.email?.split("@")[0] || "Вы",
+          avatar: "LunaPhoto/image.png",
+          about: "без описания"
+        });
+
+        await runTransaction(db, async (transaction) => {
+          const usernameRef = doc(db, "usernames", payload.usernameLower);
+          const usernameSnap = await transaction.get(usernameRef);
+          if (!usernameSnap.exists()) {
+            transaction.set(usernameRef, {
+              uid: user.uid,
+              username: payload.usernameLower
+            });
+          }
+          transaction.set(profileRef, {
+            ...payload,
+            createdAt: new Date().toISOString()
+          });
+        });
+
+        return payload;
+      }
+
+      async function saveProfileToFirestore(nextProfile) {
+        const currentUser = auth.currentUser;
+        if (!currentUser) {
+          throw new Error("Нет активного пользователя.");
+        }
+
+        const oldUsernameLower = state.profile.usernameLower;
+        const newUsernameLower = normalizeUsername(nextProfile.username);
+        const profileRef = doc(db, "users", currentUser.uid);
+
+        await runTransaction(db, async (transaction) => {
+          if (oldUsernameLower !== newUsernameLower) {
+            const oldRef = doc(db, "usernames", oldUsernameLower);
+            const newRef = doc(db, "usernames", newUsernameLower);
+            const newSnap = await transaction.get(newRef);
+
+            if (newSnap.exists() && newSnap.data().uid !== currentUser.uid) {
+              throw new Error("username-taken");
+            }
+
+            transaction.set(newRef, {
+              uid: currentUser.uid,
+              username: newUsernameLower
+            });
+            transaction.delete(oldRef);
+          }
+
+          transaction.set(profileRef, makeProfilePayload({
+            uid: currentUser.uid,
+            email: currentUser.email || state.profile.email,
+            username: newUsernameLower,
+            name: nextProfile.name,
+            avatar: nextProfile.avatar,
+            about: nextProfile.about
+          }), { merge: true });
+        });
+      }
+
+      function applyOwnProfile(profile) {
+        state.profile = {
+          uid: profile.uid,
+          email: profile.email || "",
+          username: profile.username,
+          usernameLower: profile.usernameLower || normalizeUsername(profile.username),
+          name: profile.name || "Вы",
+          nameLower: profile.nameLower || (profile.name || "Вы").toLowerCase(),
+          avatar: profile.avatar || "LunaPhoto/image.png",
+          about: profile.about || "без описания"
+        };
+
+        profileUsernameInput.value = state.profile.username;
+        profileNameInput.value = state.profile.name;
+        profileAvatarInput.value = state.profile.avatar;
+        profileAboutInput.value = state.profile.about;
+        syncProfilePreview();
+        syncBrand();
+      }
+
+      async function loadPeople(term = "") {
+        if (!auth.currentUser) {
+          return;
+        }
+
+        const usersRef = collection(db, "users");
+        const normalized = term.trim().toLowerCase();
+        let items = [];
+
+        if (!normalized) {
+          const snapshot = await getDocs(query(usersRef, orderBy("nameLower"), limit(20)));
+          items = snapshot.docs.map((entry) => entry.data());
+        } else {
+          const [byUsername, byName] = await Promise.all([
+            getDocs(query(usersRef, orderBy("usernameLower"), startAt(normalized), endAt(`${normalized}\uf8ff`), limit(12))),
+            getDocs(query(usersRef, orderBy("nameLower"), startAt(normalized), endAt(`${normalized}\uf8ff`), limit(12)))
+          ]);
+
+          const merged = new Map();
+          [...byUsername.docs, ...byName.docs].forEach((entry) => {
+            merged.set(entry.id, entry.data());
+          });
+          items = [...merged.values()];
+        }
+
+        state.people = items
+          .filter((item) => item.uid && item.uid !== auth.currentUser.uid)
+          .map((item) => ({
+            uid: item.uid,
+            username: item.username,
+            name: item.name,
+            avatar: item.avatar || "LunaPhoto/image.png",
+            about: item.about || "без описания",
+            email: item.email || ""
+          }));
+
+        searchHint.textContent = normalized
+          ? `Показаны результаты по запросу: ${term.trim()}`
+          : "Начни вводить ник или имя. Пока показываются найденные люди.";
+
+        renderPeople();
+
+        if (state.contact) {
+          const fresh = state.people.find((person) => person.uid === state.contact.uid);
+          if (fresh) {
+            state.contact = fresh;
+            syncHeader();
+            syncContactProfile();
+          }
+        }
+      }
+
+      async function handleRegister(event) {
+        event.preventDefault();
+        const email = document.querySelector("#register-email").value.trim();
+        const username = document.querySelector("#register-username").value.trim();
+        const name = document.querySelector("#register-name").value.trim();
+        const password = document.querySelector("#register-password").value;
+
+        if (!isValidUsername(normalizeUsername(username))) {
+          setAuthHint("Ник: только латиница, цифры и _. Длина от 4 до 20.", "error");
+          return;
+        }
+
+        if (name.length < 2) {
+          setAuthHint("Имя слишком короткое.", "error");
+          return;
+        }
+
+        if (password.length < 6) {
+          setAuthHint("Пароль должен быть минимум 6 символов.", "error");
+          return;
+        }
+
+        setAuthLoading(registerSubmit, true);
+        setAuthHint("Создаю аккаунт...");
+
+        try {
+          const credential = await createUserWithEmailAndPassword(auth, email, password);
+          try {
+            await reserveUsernameAndCreateProfile(credential.user, { email, username, name });
+            setAuthHint("Аккаунт создан. Входим...", "good");
+          } catch (profileError) {
+            if (profileError instanceof Error && profileError.message === "username-taken") {
+              await deleteUser(credential.user);
+              throw new Error("Этот ник уже занят.");
+            }
+            throw profileError;
+          }
+        } catch (error) {
+          const message = error instanceof Error ? error.message : "Не удалось создать аккаунт.";
+          setAuthHint(message.includes("auth/") ? "Firebase отклонил регистрацию. Проверь Email/Password в Authentication." : message, "error");
+        } finally {
+          setAuthLoading(registerSubmit, false);
+        }
+      }
+
+      async function handleLogin(event) {
+        event.preventDefault();
+        const email = document.querySelector("#login-email").value.trim();
+        const password = document.querySelector("#login-password").value;
+
+        setAuthLoading(loginSubmit, true);
+        setAuthHint("Вхожу...");
+
+        try {
+          await signInWithEmailAndPassword(auth, email, password);
+          setAuthHint("Вход выполнен.", "good");
+        } catch {
+          setAuthHint("Не удалось войти. Проверь почту, пароль и включен ли Email/Password в Firebase.", "error");
+        } finally {
+          setAuthLoading(loginSubmit, false);
+        }
+      }
+
+      async function handleSaveSettings() {
+        const nextProfile = {
+          username: profileUsernameInput.value.trim(),
+          name: profileNameInput.value.trim(),
+          avatar: profileAvatarInput.value.trim() || "LunaPhoto/image.png",
+          about: profileAboutInput.value.trim() || "без описания"
+        };
+
+        if (!isValidUsername(normalizeUsername(nextProfile.username))) {
+          setComposerHint("Юзернейм: только латиница, цифры и _. Длина от 4 до 20.", "error");
+          return;
+        }
+
+        if (nextProfile.name.length < 2) {
+          setComposerHint("Имя слишком короткое.", "error");
+          return;
+        }
+
+        try {
+          await saveProfileToFirestore(nextProfile);
+          applyOwnProfile(makeProfilePayload({
+            uid: state.profile.uid,
+            email: state.profile.email,
+            username: normalizeUsername(nextProfile.username),
+            name: nextProfile.name,
+            avatar: nextProfile.avatar,
+            about: nextProfile.about
+          }));
+          await loadPeople(peopleSearch.value);
+          setComposerHint("Профиль сохранен.", "good");
+          closeLayer(settingsLayer);
+        } catch (error) {
+          const message = error instanceof Error && error.message === "username-taken"
+            ? "Этот юзернейм уже занят."
+            : "Не удалось сохранить профиль.";
+          setComposerHint(message, "error");
+        }
+      }
+
+      function openContact() {
+        if (!state.contact) {
+          setComposerHint("Сначала выбери человека.", "error");
+          return;
+        }
+        syncContactProfile();
+        openLayer(contactLayer);
+      }
+
+      function toggleBlockCurrentContact() {
+        if (!state.contact) {
+          return;
+        }
+
+        if (state.blockedUsers.has(state.contact.uid)) {
+          state.blockedUsers.delete(state.contact.uid);
+        } else {
+          state.blockedUsers.add(state.contact.uid);
+        }
+
+        saveBlockedUsers();
+        syncHeader();
+        syncContactProfile();
+        applyComposerState();
+        renderPeople();
+
+        if (state.blockedUsers.has(state.contact.uid) && callLayer.classList.contains("is-open")) {
+          closeLayer(callLayer);
+          stopCallTimer();
+        }
+      }
+
+      function attachSelectedFile(file) {
+        if (!file) {
+          state.attachedFile = null;
+          applyComposerState();
+          return;
+        }
+
+        const type = file.type.startsWith("image/")
+          ? "image"
+          : file.type.startsWith("video/")
+            ? "video"
+            : "file";
+
+        state.attachedFile = {
+          file,
+          kind: type,
+          url: type === "file" ? "" : URL.createObjectURL(file)
+        };
+        applyComposerState();
+      }
+
+      function handleRecordToggle() {
+        if (!state.contact || state.blockedUsers.has(state.contact.uid)) {
+          return;
+        }
+
+        state.recording = !state.recording;
+        if (state.recording) {
+          state.recordStartedAt = Date.now();
+          recordButton.classList.add("is-active");
+        } else {
+          recordButton.classList.remove("is-active");
+        }
+        applyComposerState();
+      }
+
+      function sendIncomingTestReply() {
+        if (!state.contact) {
+          return;
+        }
+
+        const currentUid = state.contact.uid;
+        window.setTimeout(() => {
+          if (!state.contact || state.contact.uid !== currentUid) {
+            return;
+          }
+
+          appendMessage({
+            type: "incoming",
+            text: "TEST",
+            time: getTime()
+          });
+        }, 320);
+      }
+
+      function buildOutgoingPayload() {
+        const text = messageInput.value.trim();
+        const outgoing = {
+          type: "outgoing",
+          text,
+          time: getTime()
+        };
+
+        if (state.attachedFile) {
+          outgoing.media = {
+            kind: state.attachedFile.kind,
+            name: state.attachedFile.file.name,
+            url: state.attachedFile.url
+          };
+          if (!text) {
+            outgoing.text = state.attachedFile.file.name;
+          }
+        }
+
+        if (state.recording) {
+          const seconds = Math.max(1, Math.round((Date.now() - state.recordStartedAt) / 1000));
+          outgoing.voice = {
+            duration: formatDuration(seconds)
+          };
+          if (!outgoing.text) {
+            outgoing.text = "Голосовое сообщение";
+          }
+        }
+
+        return outgoing;
+      }
+
+      function resetComposerAfterSend() {
+        messageInput.value = "";
+        if (state.attachedFile?.url) {
+          URL.revokeObjectURL(state.attachedFile.url);
+        }
+        state.attachedFile = null;
+        fileInput.value = "";
+        state.recording = false;
+        recordButton.classList.remove("is-active");
+        applyComposerState();
+        messageInput.focus();
+      }
+
+      function handleComposerSubmit(event) {
+        event.preventDefault();
+
+        if (!state.contact) {
+          setComposerHint("Сначала выбери человека.", "error");
+          return;
+        }
+
+        if (state.blockedUsers.has(state.contact.uid)) {
+          setComposerHint(`Вы заблокировали ${state.contact.name}. Сначала разблокируйте профиль.`, "error");
+          return;
+        }
+
+        const payload = buildOutgoingPayload();
+        if (!payload.text && !payload.media && !payload.voice) {
+          messageInput.focus();
+          return;
+        }
+
+        appendMessage(payload);
+        resetComposerAfterSend();
+        sendIncomingTestReply();
+      }
+
+      async function bootSession(user) {
+        const profile = await ensureOwnProfile(user);
+        applyOwnProfile(profile);
+        authScreen.classList.add("hidden");
+        appShell.classList.remove("hidden");
+        setComposerHint("Загружаю людей...");
+        state.contact = null;
+        syncHeader();
+        syncContactProfile();
+        applyComposerState();
+        renderMessages();
+        await loadPeople("");
+        setComposerHint("Выбери человека слева.");
+      }
+
+      function teardownSession() {
+        state.contact = null;
+        state.people = [];
+        state.messagesByUser = {};
+        peopleSearch.value = "";
+        peopleList.innerHTML = "";
+        authScreen.classList.remove("hidden");
+        appShell.classList.add("hidden");
+        renderMessages();
+        stopCallTimer();
+      }
+
+      authTabs.forEach((tab) => {
+        tab.addEventListener("click", () => {
+          switchAuthTab(tab.dataset.authTab);
+        });
+      });
+
+      loginForm.addEventListener("submit", handleLogin);
+      registerForm.addEventListener("submit", handleRegister);
+
+      openSettingsButton.addEventListener("click", () => {
+        profileUsernameInput.value = state.profile.username;
+        profileNameInput.value = state.profile.name;
+        profileAvatarInput.value = state.profile.avatar;
+        profileAboutInput.value = state.profile.about;
+        settingsInputDevice.value = state.devices.input;
+        settingsOutputDevice.value = state.devices.output;
+        syncProfilePreview();
+        openLayer(settingsLayer);
+      });
+
+      profileUsernameInput.addEventListener("input", syncProfilePreview);
+      profileNameInput.addEventListener("input", syncProfilePreview);
+      profileAvatarInput.addEventListener("input", syncProfilePreview);
+      profileAboutInput.addEventListener("input", syncProfilePreview);
+
+      saveSettingsButton.addEventListener("click", handleSaveSettings);
+      logoutButton.addEventListener("click", async () => {
+        await signOut(auth);
+        closeLayer(settingsLayer);
+      });
+
+      requestDevicesButton.addEventListener("click", requestDeviceAccess);
+      refreshDevicesButton.addEventListener("click", async () => {
+        if (state.devices.permissionGranted) {
+          await collectDevices();
+        } else {
+          await requestDeviceAccess();
+        }
+      });
+
+      startCallButton.addEventListener("click", () => openCall("voice"));
+      startVideoButton.addEventListener("click", () => openCall("video"));
+      openContactAvatar.addEventListener("click", openContact);
+      toggleContactBlock.addEventListener("click", toggleBlockCurrentContact);
+
+      toggleCallMic.addEventListener("click", () => {
+        state.call.micEnabled = !state.call.micEnabled;
+        syncCallControls();
+      });
+
+      toggleCallOutput.addEventListener("click", () => {
+        state.call.outputEnabled = !state.call.outputEnabled;
+        syncCallControls();
+      });
+
+      callInputDevice.addEventListener("change", () => {
+        state.devices.input = callInputDevice.value;
+        settingsInputDevice.value = state.devices.input;
+      });
+
+      callOutputDevice.addEventListener("change", () => {
+        state.devices.output = callOutputDevice.value;
+        settingsOutputDevice.value = state.devices.output;
+      });
+
+      settingsInputDevice.addEventListener("change", () => {
+        state.devices.input = settingsInputDevice.value;
+        callInputDevice.value = state.devices.input;
+      });
+
+      settingsOutputDevice.addEventListener("change", () => {
+        state.devices.output = settingsOutputDevice.value;
+        callOutputDevice.value = state.devices.output;
+      });
+
+      remoteVolume.addEventListener("input", () => {
+        state.call.remoteVolume = Number(remoteVolume.value);
+        remoteVolumeValue.textContent = `${state.call.remoteVolume}%`;
+      });
+
+      outputVolume.addEventListener("input", () => {
+        state.call.outputVolume = Number(outputVolume.value);
+        outputVolumeValue.textContent = `${state.call.outputVolume}%`;
+      });
+
+      recordButton.addEventListener("click", handleRecordToggle);
+      attachButton.addEventListener("click", () => {
+        if (!state.contact || state.blockedUsers.has(state.contact.uid)) {
+          return;
+        }
+        fileInput.click();
+      });
+
+      fileInput.addEventListener("change", () => {
+        attachSelectedFile(fileInput.files?.[0] || null);
+      });
+
+      composer.addEventListener("submit", handleComposerSubmit);
+
+      peopleSearch.addEventListener("input", () => {
+        window.clearTimeout(state.searchTimer);
+        state.searchTimer = window.setTimeout(() => {
+          loadPeople(peopleSearch.value).catch(() => {
+            searchHint.textContent = "Не удалось загрузить людей из Firestore.";
+          });
+        }, 220);
+      });
+
+      document.querySelectorAll("[data-close]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const layer = document.getElementById(button.getAttribute("data-close"));
+          if (!layer) {
+            return;
+          }
+          if (layer === callLayer) {
+            stopCallTimer();
+          }
+          closeLayer(layer);
+        });
+      });
+
+      [settingsLayer, callLayer, contactLayer].forEach((layer) => {
+        layer.addEventListener("click", (event) => {
+          if (event.target === layer) {
+            if (layer === callLayer) {
+              stopCallTimer();
+            }
+            closeLayer(layer);
+          }
+        });
+      });
+
+      syncProfilePreview();
+      syncDeviceSelects();
+      syncCallControls();
+      syncHeader();
+      syncContactProfile();
+      applyComposerState();
+      renderMessages();
+
+      onAuthStateChanged(auth, async (user) => {
+        if (!user) {
+          teardownSession();
+          setAuthHint("Войди или зарегистрируйся.");
+          return;
+        }
+
+        try {
+          await bootSession(user);
+          setAuthHint("Вход выполнен.", "good");
+        } catch (error) {
+          console.error(error);
+          setAuthHint("Не удалось загрузить профиль. Проверь Firestore и правила доступа.", "error");
+        }
+      });
+    </script>
+  </body>
+</html>
