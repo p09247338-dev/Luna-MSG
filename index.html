@@ -582,6 +582,7 @@
         display: flex;
         align-items: center;
         gap: 10px;
+        margin-bottom: 6px;
       }
 
       .message__voice-bar {
@@ -594,6 +595,11 @@
       .message__voice-time {
         font-size: 0.78rem;
         opacity: 0.7;
+      }
+
+      .message__voice audio {
+        flex: 1 1 auto;
+        min-width: 0;
       }
 
       .chat__notice {
@@ -854,32 +860,127 @@
         background: rgba(215, 137, 137, 0.2);
       }
 
+      .call-media {
+        display: none;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+
+      .call-media.is-visible {
+        display: grid;
+      }
+
+      .call-media__remote,
+      .call-media__local {
+        width: 100%;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        background: #161c23;
+      }
+
+      .call-media__remote video,
+      .call-media__local video {
+        width: 100%;
+        display: block;
+        aspect-ratio: 16 / 9;
+        object-fit: cover;
+        background: #11161d;
+      }
+
+      .call-media__local {
+        justify-self: end;
+        width: min(180px, 42%);
+      }
+
+      .incoming-call {
+        position: fixed;
+        right: 16px;
+        bottom: 16px;
+        z-index: 30;
+        width: min(360px, calc(100vw - 24px));
+        padding: 12px;
+        border: 1px solid var(--line-strong);
+        border-radius: 12px;
+        background: #222c36;
+        box-shadow: 0 16px 42px rgba(0, 0, 0, 0.32);
+      }
+
+      .incoming-call.hidden {
+        display: none;
+      }
+
+      .incoming-call__row {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .incoming-call__avatar {
+        width: 52px;
+        height: 52px;
+        border-radius: 12px;
+        object-fit: cover;
+        border: 1px solid var(--line);
+      }
+
+      .incoming-call__title {
+        margin: 0;
+        font-size: 0.95rem;
+        font-weight: 600;
+      }
+
+      .incoming-call__text {
+        margin: 4px 0 0;
+        color: var(--muted);
+        font-size: 0.8rem;
+        line-height: 1.4;
+      }
+
+      .incoming-call__actions {
+        margin-top: 10px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+
       .hidden {
         display: none;
       }
 
       @media (max-width: 920px) {
-        .app {
-          height: auto;
-          min-height: calc(100vh - 20px);
-          grid-template-columns: 1fr;
-        }
-
-        .sidebar {
-          order: 2;
-        }
-
-        .chat {
-          order: 1;
-          min-height: 72vh;
-        }
-      }
-
-      @media (max-width: 620px) {
         .shell {
           padding: 8px;
         }
 
+        .app {
+          height: calc(100vh - 16px);
+          min-height: calc(100vh - 16px);
+          grid-template-columns: 1fr;
+          grid-template-rows: minmax(216px, 32vh) minmax(0, 1fr);
+        }
+
+        .sidebar {
+          order: 1;
+          min-height: 216px;
+        }
+
+        .chat {
+          order: 2;
+          min-height: 0;
+        }
+
+        .sidebar__list {
+          padding-bottom: 12px;
+        }
+
+        .messages {
+          padding-bottom: 12px;
+        }
+      }
+
+      @media (max-width: 620px) {
         .auth-screen {
           min-height: calc(100vh - 16px);
           padding: 12px 0;
@@ -892,12 +993,64 @@
           border-radius: 10px;
         }
 
+        .brand {
+          padding: 8px;
+        }
+
+        .brand__cover {
+          height: 88px;
+        }
+
+        .sidebar__list {
+          padding: 6px;
+        }
+
+        .search {
+          margin-bottom: 4px;
+        }
+
+        .chat__header {
+          padding: 8px 10px;
+        }
+
+        .chat__header-status {
+          line-height: 1.35;
+        }
+
+        .messages {
+          padding: 8px 10px 6px;
+        }
+
+        .message {
+          max-width: 92%;
+        }
+
         .composer__form {
           grid-template-columns: auto 1fr auto auto;
+          gap: 4px;
+          padding: 5px;
+        }
+
+        .composer {
+          padding: 6px 8px 8px;
         }
 
         .modal__grid {
           grid-template-columns: 1fr;
+        }
+
+        .modal__body {
+          padding: 10px 12px 12px;
+        }
+
+        .incoming-call {
+          right: 8px;
+          bottom: 8px;
+          width: calc(100vw - 16px);
+        }
+
+        .call-media__local {
+          width: min(140px, 44%);
         }
       }
     </style>
@@ -983,8 +1136,8 @@
           </header>
 
           <div class="sidebar__list">
-            <input class="search" id="people-search" type="text" placeholder="Поиск по нику или имени" aria-label="Поиск пользователей" />
-            <p class="sidebar__hint" id="search-hint">Начни вводить ник или имя. Пока показываются найденные люди.</p>
+            <input class="search" id="people-search" type="text" placeholder="Введи ник или имя" aria-label="Поиск пользователей" />
+            <p class="sidebar__hint" id="search-hint">Список пустой, пока ты ничего не ищешь.</p>
             <div class="people-list" id="people-list"></div>
           </div>
         </aside>
@@ -997,7 +1150,7 @@
               </button>
               <div>
                 <h2 class="chat__header-title" id="header-title">Выбери человека</h2>
-                <p class="chat__header-status" id="chat-status">Поиск слева. Пока чат без реальной синхронизации сообщений.</p>
+                <p class="chat__header-status" id="chat-status">Ищи по нику или имени. После выбора откроется реальный чат.</p>
               </div>
             </div>
 
@@ -1017,7 +1170,7 @@
           </header>
 
           <div class="messages" id="messages">
-            <div class="empty-chat" id="empty-chat">Слева выбери человека. После выбора можно писать, кидать фото и видео. Ответ пока тестовый.</div>
+            <div class="empty-chat" id="empty-chat">Никого не открыто. Найди человека через поиск слева, и чат загрузится в реальном времени.</div>
           </div>
 
           <div class="chat__notice hidden" id="blocked-notice">Вы заблокировали этого пользователя. Сообщения и звонки недоступны.</div>
@@ -1164,6 +1317,15 @@
             </div>
           </section>
 
+          <section class="call-media" id="call-media">
+            <div class="call-media__remote">
+              <video id="remote-video" playsinline autoplay></video>
+            </div>
+            <div class="call-media__local">
+              <video id="local-video" playsinline autoplay muted></video>
+            </div>
+          </section>
+
           <section class="modal__grid">
             <section class="modal__card modal__stack">
               <p class="modal__card-title">Микрофон</p>
@@ -1214,7 +1376,7 @@
         </div>
 
         <footer class="modal__footer">
-          <button class="modal__button" data-close="call-layer" type="button">Закрыть</button>
+          <button class="modal__button modal__danger" id="end-call" type="button">Завершить</button>
         </footer>
       </section>
     </div>
@@ -1267,6 +1429,22 @@
       </section>
     </div>
 
+    <section class="incoming-call hidden" id="incoming-call" aria-live="polite">
+      <div class="incoming-call__row">
+        <img class="incoming-call__avatar" id="incoming-call-avatar" src="LunaPhoto/image.png" alt="Звонящий" />
+        <div>
+          <p class="incoming-call__title" id="incoming-call-name">Входящий звонок</p>
+          <p class="incoming-call__text" id="incoming-call-text">Кто-то пытается дозвониться.</p>
+        </div>
+      </div>
+      <div class="incoming-call__actions">
+        <button class="modal__button modal__danger" id="decline-call" type="button">Отклонить</button>
+        <button class="modal__button modal__button--primary" id="accept-call" type="button">Ответить</button>
+      </div>
+    </section>
+
+    <audio id="remote-audio" autoplay playsinline class="hidden"></audio>
+
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
       import {
@@ -1278,13 +1456,16 @@
         signOut
       } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
       import {
+        addDoc,
         collection,
+        deleteDoc,
         doc,
         endAt,
         getDoc,
         getDocs,
         getFirestore,
         limit,
+        onSnapshot,
         orderBy,
         query,
         runTransaction,
@@ -1292,6 +1473,12 @@
         startAt,
         updateDoc
       } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+      import {
+        getDownloadURL,
+        getStorage,
+        ref,
+        uploadBytesResumable
+      } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-storage.js";
 
       const firebaseConfig = {
         apiKey: "AIzaSyBv7Fltdgttnu3gfYuxl3rKIwVwO8EMmAU",
@@ -1303,9 +1490,10 @@
         measurementId: "G-S7785VD9L6"
       };
 
-      const app = initializeApp(firebaseConfig);
-      const auth = getAuth(app);
-      const db = getFirestore(app);
+      const firebaseApp = initializeApp(firebaseConfig);
+      const auth = getAuth(firebaseApp);
+      const db = getFirestore(firebaseApp);
+      const storage = getStorage(firebaseApp);
 
       const authScreen = document.querySelector("#auth-screen");
       const authHint = document.querySelector("#auth-hint");
@@ -1352,6 +1540,10 @@
       const callAvatar = document.querySelector("#call-avatar");
       const callContactName = document.querySelector("#call-contact-name");
       const callTimer = document.querySelector("#call-timer");
+      const callMedia = document.querySelector("#call-media");
+      const remoteVideo = document.querySelector("#remote-video");
+      const localVideo = document.querySelector("#local-video");
+      const remoteAudio = document.querySelector("#remote-audio");
       const toggleCallMic = document.querySelector("#toggle-call-mic");
       const toggleCallOutput = document.querySelector("#toggle-call-output");
       const callInputDevice = document.querySelector("#call-input-device");
@@ -1361,6 +1553,13 @@
       const remoteVolumeValue = document.querySelector("#remote-volume-value");
       const outputVolume = document.querySelector("#output-volume");
       const outputVolumeValue = document.querySelector("#output-volume-value");
+      const endCallButton = document.querySelector("#end-call");
+      const incomingCallCard = document.querySelector("#incoming-call");
+      const incomingCallAvatar = document.querySelector("#incoming-call-avatar");
+      const incomingCallName = document.querySelector("#incoming-call-name");
+      const incomingCallText = document.querySelector("#incoming-call-text");
+      const acceptCallButton = document.querySelector("#accept-call");
+      const declineCallButton = document.querySelector("#decline-call");
       const chatStatus = document.querySelector("#chat-status");
       const blockedNotice = document.querySelector("#blocked-notice");
       const contactAvatar = document.querySelector("#contact-avatar");
@@ -1378,7 +1577,6 @@
       const sendButton = document.querySelector("#send-button");
 
       const state = {
-        authReady: false,
         profile: {
           uid: "",
           email: "",
@@ -1391,7 +1589,11 @@
         },
         contact: null,
         people: [],
-        messagesByUser: {},
+        chat: {
+          id: "",
+          unsubscribe: null,
+          messages: []
+        },
         devices: {
           input: "",
           output: "",
@@ -1407,11 +1609,25 @@
           remoteVolume: 76,
           outputVolume: 68,
           startedAt: 0,
-          timerId: 0
+          timerId: 0,
+          connected: false,
+          currentId: "",
+          direction: "",
+          docUnsubscribe: null,
+          candidateUnsubscribes: [],
+          incomingUnsubscribe: null,
+          incoming: null,
+          peer: null,
+          localStream: null,
+          remoteStream: null
         },
         recording: false,
+        mediaRecorder: null,
+        recordingStream: null,
         recordStartedAt: 0,
+        recordChunks: [],
         attachedFile: null,
+        pendingVoice: null,
         searchTimer: 0,
         blockedUsers: loadBlockedUsers()
       };
@@ -1431,19 +1647,47 @@
       }
 
       function normalizeUsername(value) {
-        return value.trim().toLowerCase();
+        return value.trim().toLowerCase().replace(/^@+/, "");
+      }
+
+      function isValidUsername(value) {
+        return /^[a-z0-9_]{4,20}$/.test(value);
       }
 
       function escapeHtml(value) {
-        return value
+        return String(value)
           .replaceAll("&", "&amp;")
           .replaceAll("<", "&lt;")
           .replaceAll(">", "&gt;")
           .replaceAll('"', "&quot;");
       }
 
-      function isValidUsername(value) {
-        return /^[a-z0-9_]{4,20}$/.test(value);
+      function getTimeLabel(timestamp = Date.now()) {
+        return new Date(timestamp).toLocaleTimeString("ru-RU", {
+          hour: "2-digit",
+          minute: "2-digit"
+        });
+      }
+
+      function getTodayLabel() {
+        return new Date().toLocaleDateString("ru-RU", {
+          day: "numeric",
+          month: "long"
+        });
+      }
+
+      function formatDuration(seconds) {
+        const mins = String(Math.floor(seconds / 60)).padStart(2, "0");
+        const secs = String(seconds % 60).padStart(2, "0");
+        return `${mins}:${secs}`;
+      }
+
+      function getChatId(firstId, secondId) {
+        return [firstId, secondId].sort().join("__");
+      }
+
+      function sanitizeFileName(name) {
+        return name.replace(/[^\w.-]+/g, "-").slice(0, 80);
       }
 
       function setAuthHint(text, type = "") {
@@ -1473,29 +1717,8 @@
         layer.setAttribute("aria-hidden", "true");
       }
 
-      function getTime() {
-        return new Date().toLocaleTimeString("ru-RU", {
-          hour: "2-digit",
-          minute: "2-digit"
-        });
-      }
-
-      function getTodayLabel() {
-        return new Date().toLocaleDateString("ru-RU", {
-          day: "numeric",
-          month: "long"
-        });
-      }
-
-      function formatDuration(seconds) {
-        const mins = String(Math.floor(seconds / 60)).padStart(2, "0");
-        const secs = String(seconds % 60).padStart(2, "0");
-        return `${mins}:${secs}`;
-      }
-
       function setSelectOptions(select, items, fallbackText, selectedValue) {
         select.innerHTML = "";
-
         if (!items.length) {
           const option = document.createElement("option");
           option.value = "";
@@ -1525,7 +1748,7 @@
 
         const outputNote = state.devices.outputSelectionSupported
           ? "Выбор вывода звука поддерживается в этом браузере."
-          : "Браузер не отдал список audio output или не поддерживает выбор вывода.";
+          : "Браузер не поддерживает выбор устройства вывода.";
 
         devicePermissionStatus.textContent = `Доступ получен. Найдено микрофонов: ${state.devices.inputs.length}. Найдено выводов: ${state.devices.outputs.length}. ${outputNote}`;
         callDeviceStatus.textContent = outputNote;
@@ -1609,17 +1832,21 @@
         const name = profileNameInput.value.trim() || "Вы";
         const about = profileAboutInput.value.trim() || "без описания";
         const avatar = profileAvatarInput.value.trim() || "LunaPhoto/image.png";
-
         profilePreviewName.textContent = name;
         profilePreviewMeta.textContent = `@${username} · ${about}`;
         profilePreviewAvatar.src = avatar;
+      }
+
+      function syncBrand() {
+        brandAvatar.src = state.profile.avatar;
+        brandMeta.textContent = `@${state.profile.username}`;
       }
 
       function syncHeader() {
         if (!state.contact) {
           headerAvatar.src = "LunaPhoto/image.png";
           headerTitle.textContent = "Выбери человека";
-          chatStatus.textContent = "Поиск слева. Пока чат без реальной синхронизации сообщений.";
+          chatStatus.textContent = "Ищи по нику или имени. После выбора откроется реальный чат.";
           openContactAvatar.classList.remove("is-clickable");
           openContactAvatar.disabled = true;
           startCallButton.disabled = true;
@@ -1637,11 +1864,6 @@
         startVideoButton.disabled = blocked;
       }
 
-      function syncBrand() {
-        brandAvatar.src = state.profile.avatar;
-        brandMeta.textContent = `@${state.profile.username}`;
-      }
-
       function syncContactProfile() {
         if (!state.contact) {
           contactAvatar.src = "LunaPhoto/image.png";
@@ -1657,18 +1879,33 @@
         }
 
         const blocked = state.blockedUsers.has(state.contact.uid);
-        const usernameText = `@${state.contact.username}`;
         contactAvatar.src = state.contact.avatar;
         contactName.textContent = state.contact.name;
-        contactMeta.textContent = `${usernameText} · ${blocked ? "заблокирован" : "на связи"}`;
-        contactUsername.value = usernameText;
+        contactMeta.textContent = `@${state.contact.username} · ${blocked ? "заблокирован" : "на связи"}`;
+        contactUsername.value = `@${state.contact.username}`;
         contactDisplayName.value = state.contact.name;
-        contactAbout.value = state.contact.about;
+        contactAbout.value = state.contact.about || "без описания";
         contactBlockStatus.textContent = blocked
           ? "Вы заблокировали этого пользователя. Сообщения и звонки отключены."
           : "Пользователь не заблокирован.";
         toggleContactBlock.textContent = blocked ? "Разблокировать" : "Заблокировать";
         toggleContactBlock.disabled = false;
+      }
+
+      function revokeAttachedPreview() {
+        if (state.attachedFile?.previewUrl) {
+          URL.revokeObjectURL(state.attachedFile.previewUrl);
+        }
+      }
+
+      function clearPendingMedia() {
+        revokeAttachedPreview();
+        state.attachedFile = null;
+        state.pendingVoice = null;
+        fileInput.value = "";
+        if (state.recording) {
+          stopVoiceRecording();
+        }
       }
 
       function applyComposerState() {
@@ -1682,7 +1919,7 @@
         sendButton.disabled = !enabled;
 
         if (!state.contact) {
-          setComposerHint("Сначала выбери человека слева.");
+          setComposerHint("Сначала найди человека по нику или имени.");
           return;
         }
 
@@ -1691,18 +1928,81 @@
           return;
         }
 
+        if (state.recording) {
+          const seconds = Math.max(1, Math.round((Date.now() - state.recordStartedAt) / 1000));
+          setComposerHint(`Идёт запись: ${formatDuration(seconds)}. Нажми на микрофон ещё раз, чтобы остановить.`);
+          return;
+        }
+
+        if (state.pendingVoice) {
+          setComposerHint(`Голосовое готово: ${state.pendingVoice.duration}. Можно отправлять.`, "good");
+          return;
+        }
+
         if (state.attachedFile) {
           setComposerHint(`Файл готов: ${state.attachedFile.file.name}`);
           return;
         }
 
-        if (state.recording) {
-          const seconds = Math.max(1, Math.round((Date.now() - state.recordStartedAt) / 1000));
-          setComposerHint(`Идёт запись: ${formatDuration(seconds)}.`);
+        setComposerHint("Пиши сообщение, отправляй фото, видео или голосовое.");
+      }
+
+      function applyRemoteVolume() {
+        const volume = state.call.outputEnabled
+          ? (state.call.remoteVolume / 100) * (state.call.outputVolume / 100)
+          : 0;
+        remoteAudio.volume = volume;
+        remoteVideo.volume = volume;
+      }
+
+      async function applyOutputDevice() {
+        if (!state.devices.output || !state.devices.outputSelectionSupported) {
           return;
         }
 
-        setComposerHint("Сообщения пока локальные. В ответ приходит TEST.");
+        try {
+          if (typeof remoteAudio.setSinkId === "function") {
+            await remoteAudio.setSinkId(state.devices.output);
+          }
+          if (typeof remoteVideo.setSinkId === "function") {
+            await remoteVideo.setSinkId(state.devices.output);
+          }
+        } catch (error) {
+          console.error(error);
+          setComposerHint("Не удалось переключить устройство вывода.", "error");
+        }
+      }
+
+      async function switchActiveMicrophone(deviceId) {
+        if (!state.call.localStream || !state.call.peer) {
+          return;
+        }
+
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            audio: deviceId ? { deviceId: { exact: deviceId } } : true
+          });
+          const nextTrack = stream.getAudioTracks()[0];
+          const sender = state.call.peer.getSenders().find((item) => item.track?.kind === "audio");
+          if (sender && nextTrack) {
+            await sender.replaceTrack(nextTrack);
+          }
+
+          state.call.localStream.getAudioTracks().forEach((track) => {
+            state.call.localStream.removeTrack(track);
+            track.stop();
+          });
+
+          if (nextTrack) {
+            nextTrack.enabled = state.call.micEnabled;
+            state.call.localStream.addTrack(nextTrack);
+          }
+
+          stream.getVideoTracks().forEach((track) => track.stop());
+        } catch (error) {
+          console.error(error);
+          setComposerHint("Не удалось переключить микрофон.", "error");
+        }
       }
 
       function syncCallControls() {
@@ -1710,18 +2010,18 @@
         toggleCallOutput.classList.toggle("is-on", state.call.outputEnabled);
         toggleCallMic.setAttribute("aria-label", state.call.micEnabled ? "Микрофон включен" : "Микрофон выключен");
         toggleCallOutput.setAttribute("aria-label", state.call.outputEnabled ? "Наушники включены" : "Наушники выключены");
-
-        if (callInputDevice.options.length) {
-          callInputDevice.value = state.devices.input || callInputDevice.value;
-        }
-        if (callOutputDevice.options.length) {
-          callOutputDevice.value = state.devices.output || callOutputDevice.value;
-        }
-
         remoteVolume.value = String(state.call.remoteVolume);
         outputVolume.value = String(state.call.outputVolume);
         remoteVolumeValue.textContent = `${state.call.remoteVolume}%`;
         outputVolumeValue.textContent = `${state.call.outputVolume}%`;
+
+        if (state.call.localStream) {
+          state.call.localStream.getAudioTracks().forEach((track) => {
+            track.enabled = state.call.micEnabled;
+          });
+        }
+
+        applyRemoteVolume();
         syncDeviceStatusText();
       }
 
@@ -1742,7 +2042,250 @@
         }, 1000);
       }
 
-      function openCall(type) {
+      function markCallConnected() {
+        if (state.call.connected) {
+          return;
+        }
+        state.call.connected = true;
+        callSubtitle.textContent = `${state.contact?.name || "Собеседник"} · на связи`;
+        startCallTimer();
+      }
+
+      function resetCallMediaElements() {
+        callMedia.classList.remove("is-visible");
+        remoteVideo.srcObject = null;
+        localVideo.srcObject = null;
+        remoteAudio.srcObject = null;
+      }
+
+      function cleanupCallListeners() {
+        if (state.call.docUnsubscribe) {
+          state.call.docUnsubscribe();
+          state.call.docUnsubscribe = null;
+        }
+        state.call.candidateUnsubscribes.forEach((unsubscribe) => unsubscribe());
+        state.call.candidateUnsubscribes = [];
+      }
+
+      async function endCurrentCall(options = {}) {
+        const {
+          updateRemote = true,
+          status = "ended",
+          message = ""
+        } = options;
+
+        const currentUser = auth.currentUser;
+        const callId = state.call.currentId;
+
+        cleanupCallListeners();
+        stopCallTimer();
+
+        if (state.call.peer) {
+          state.call.peer.ontrack = null;
+          state.call.peer.onicecandidate = null;
+          state.call.peer.onconnectionstatechange = null;
+          state.call.peer.close();
+        }
+
+        state.call.localStream?.getTracks().forEach((track) => track.stop());
+        state.call.remoteStream?.getTracks().forEach((track) => track.stop());
+
+        if (updateRemote && callId) {
+          try {
+            await updateDoc(doc(db, "calls", callId), { status });
+          } catch {
+            // Ignore cleanup failures.
+          }
+
+          if (currentUser) {
+            try {
+              await deleteDoc(doc(db, "users", currentUser.uid, "incomingCalls", callId));
+            } catch {
+              // Ignore cleanup failures.
+            }
+
+            if (state.contact?.uid) {
+              try {
+                await deleteDoc(doc(db, "users", state.contact.uid, "incomingCalls", callId));
+              } catch {
+                // Ignore cleanup failures.
+              }
+            }
+          }
+        }
+
+        state.call.connected = false;
+        state.call.currentId = "";
+        state.call.direction = "";
+        state.call.peer = null;
+        state.call.localStream = null;
+        state.call.remoteStream = null;
+        state.call.type = "voice";
+        resetCallMediaElements();
+        closeLayer(callLayer);
+
+        if (message) {
+          setComposerHint(message, status === "declined" ? "error" : "good");
+        }
+      }
+
+      function showIncomingCall(info) {
+        state.call.incoming = info;
+        incomingCallAvatar.src = info.callerAvatar || "LunaPhoto/image.png";
+        incomingCallName.textContent = info.callerName || "Входящий звонок";
+        incomingCallText.textContent = info.type === "video" ? "Видеозвонок. Нажми, чтобы ответить." : "Голосовой звонок. Нажми, чтобы ответить.";
+        incomingCallCard.classList.remove("hidden");
+      }
+
+      function hideIncomingCall() {
+        state.call.incoming = null;
+        incomingCallCard.classList.add("hidden");
+      }
+
+      async function subscribeToIncomingCalls(uid) {
+        if (state.call.incomingUnsubscribe) {
+          state.call.incomingUnsubscribe();
+        }
+
+        const incomingRef = collection(db, "users", uid, "incomingCalls");
+        state.call.incomingUnsubscribe = onSnapshot(incomingRef, (snapshot) => {
+          const ringing = snapshot.docs
+            .map((entry) => ({ id: entry.id, ...entry.data() }))
+            .sort((first, second) => (second.createdAtMillis || 0) - (first.createdAtMillis || 0))
+            .find((item) => item.status === "ringing");
+
+          if (ringing) {
+            showIncomingCall(ringing);
+          } else {
+            hideIncomingCall();
+          }
+        });
+      }
+
+      async function setupPeerConnection(callDocRef, role, localStream, type) {
+        const peer = new RTCPeerConnection({
+          iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
+        });
+
+        state.call.peer = peer;
+        state.call.remoteStream = new MediaStream();
+        state.call.type = type;
+
+        callAvatar.src = state.contact?.avatar || "LunaPhoto/image.png";
+        callContactName.textContent = state.contact?.name || "Собеседник";
+        callMedia.classList.toggle("is-visible", type === "video");
+
+        localVideo.srcObject = type === "video" ? localStream : null;
+        remoteVideo.srcObject = state.call.remoteStream;
+        remoteAudio.srcObject = state.call.remoteStream;
+        localStream.getTracks().forEach((track) => {
+          peer.addTrack(track, localStream);
+        });
+
+        peer.ontrack = (event) => {
+          event.streams.forEach((stream) => {
+            stream.getTracks().forEach((track) => {
+              if (!state.call.remoteStream.getTracks().some((existing) => existing.id === track.id)) {
+                state.call.remoteStream.addTrack(track);
+              }
+            });
+          });
+
+          if (type === "video" && state.call.remoteStream.getVideoTracks().length > 0) {
+            callMedia.classList.add("is-visible");
+          }
+        };
+
+        peer.onicecandidate = async (event) => {
+          if (!event.candidate) {
+            return;
+          }
+          const targetCollection = role === "caller" ? "offerCandidates" : "answerCandidates";
+          await addDoc(collection(callDocRef, targetCollection), event.candidate.toJSON());
+        };
+
+        peer.onconnectionstatechange = () => {
+          if (peer.connectionState === "connected") {
+            markCallConnected();
+          }
+          if (["failed", "disconnected", "closed"].includes(peer.connectionState) && state.call.currentId) {
+            endCurrentCall({
+              updateRemote: false,
+              message: "Звонок завершён."
+            }).catch(console.error);
+          }
+        };
+
+        const remoteCandidateCollection = role === "caller" ? "answerCandidates" : "offerCandidates";
+        const unsubscribeCandidates = onSnapshot(collection(callDocRef, remoteCandidateCollection), (snapshot) => {
+          snapshot.docChanges().forEach(async (change) => {
+            if (change.type !== "added" || !state.call.peer) {
+              return;
+            }
+            try {
+              await state.call.peer.addIceCandidate(new RTCIceCandidate(change.doc.data()));
+            } catch (error) {
+              console.error(error);
+            }
+          });
+        });
+        state.call.candidateUnsubscribes.push(unsubscribeCandidates);
+
+        syncCallControls();
+        await applyOutputDevice();
+        return peer;
+      }
+
+      function subscribeToCallDocument(callDocRef, role) {
+        if (state.call.docUnsubscribe) {
+          state.call.docUnsubscribe();
+        }
+        state.call.docUnsubscribe = onSnapshot(callDocRef, async (snapshot) => {
+          if (!snapshot.exists()) {
+            if (state.call.currentId) {
+              await endCurrentCall({
+                updateRemote: false,
+                message: "Звонок завершён."
+              });
+            }
+            return;
+          }
+
+          const data = snapshot.data();
+          if (!state.call.peer) {
+            return;
+          }
+
+          try {
+            if (role === "caller" && data.answer && !state.call.peer.currentRemoteDescription) {
+              await state.call.peer.setRemoteDescription(new RTCSessionDescription(data.answer));
+            }
+          } catch (error) {
+            console.error(error);
+          }
+
+          if (data.status === "accepted") {
+            markCallConnected();
+          }
+
+          if (data.status === "declined") {
+            await endCurrentCall({
+              updateRemote: false,
+              status: "declined",
+              message: "Звонок отклонён."
+            });
+          }
+
+          if (data.status === "ended") {
+            await endCurrentCall({
+              updateRemote: false,
+              message: "Звонок завершён."
+            });
+          }
+        });
+      }
+
+      async function startOutgoingCall(type) {
         if (!state.contact) {
           setComposerHint("Сначала выбери человека.", "error");
           return;
@@ -1753,37 +2296,169 @@
           return;
         }
 
-        state.call.type = type;
-        callTitle.textContent = type === "video" ? "Видеозвонок" : "Голосовой звонок";
-        callSubtitle.textContent = `Вам звонят: ${state.contact.name}`;
-        callAvatar.src = state.contact.avatar;
-        callContactName.textContent = state.contact.name;
-        startCallTimer();
-        syncCallControls();
-        openLayer(callLayer);
+        try {
+          const localStream = await navigator.mediaDevices.getUserMedia({
+            audio: true,
+            video: type === "video"
+          });
+
+          const callDocRef = doc(collection(db, "calls"));
+          const offer = { type: "", sdp: "" };
+
+          state.call.currentId = callDocRef.id;
+          state.call.direction = "outgoing";
+          state.call.localStream = localStream;
+          state.call.connected = false;
+          state.call.type = type;
+          callTitle.textContent = type === "video" ? "Видеозвонок" : "Голосовой звонок";
+          callSubtitle.textContent = `${state.contact.name} · идёт вызов`;
+          callAvatar.src = state.contact.avatar;
+          callContactName.textContent = state.contact.name;
+          callTimer.textContent = "00:00";
+
+          await setupPeerConnection(callDocRef, "caller", localStream, type);
+          subscribeToCallDocument(callDocRef, "caller");
+
+          const description = await state.call.peer.createOffer();
+          await state.call.peer.setLocalDescription(description);
+          offer.type = description.type;
+          offer.sdp = description.sdp;
+
+          await setDoc(callDocRef, {
+            callerId: state.profile.uid,
+            calleeId: state.contact.uid,
+            callerName: state.profile.name,
+            callerUsername: state.profile.username,
+            callerAvatar: state.profile.avatar,
+            calleeName: state.contact.name,
+            calleeUsername: state.contact.username,
+            calleeAvatar: state.contact.avatar,
+            type,
+            status: "ringing",
+            offer,
+            createdAtMillis: Date.now()
+          });
+
+          await setDoc(doc(db, "users", state.contact.uid, "incomingCalls", callDocRef.id), {
+            callId: callDocRef.id,
+            callerId: state.profile.uid,
+            callerName: state.profile.name,
+            callerUsername: state.profile.username,
+            callerAvatar: state.profile.avatar,
+            type,
+            status: "ringing",
+            createdAtMillis: Date.now()
+          });
+
+          openLayer(callLayer);
+          setComposerHint("Идёт вызов.", "good");
+        } catch (error) {
+          console.error(error);
+          setComposerHint("Не удалось начать звонок. Проверь доступ к микрофону и камере.", "error");
+        }
       }
 
-      function createDefaultMessages(contact) {
-        return [
-          {
-            type: "incoming",
-            text: `Привет. Это чат с ${contact.name}.`,
-            time: getTime()
-          }
-        ];
-      }
-
-      function ensureContactMessages(contact) {
-        if (!state.messagesByUser[contact.uid]) {
-          state.messagesByUser[contact.uid] = createDefaultMessages(contact);
+      async function acceptIncomingCall() {
+        const info = state.call.incoming;
+        const currentUser = auth.currentUser;
+        if (!info || !currentUser) {
+          return;
         }
 
-        return state.messagesByUser[contact.uid];
+        try {
+          const callDocRef = doc(db, "calls", info.callId);
+          const callSnapshot = await getDoc(callDocRef);
+          if (!callSnapshot.exists()) {
+            hideIncomingCall();
+            return;
+          }
+
+          const callData = callSnapshot.data();
+          const contact = {
+            uid: info.callerId,
+            username: info.callerUsername || "user",
+            name: info.callerName || "Собеседник",
+            avatar: info.callerAvatar || "LunaPhoto/image.png",
+            about: "без описания",
+            email: ""
+          };
+          await setActiveContact(contact);
+
+          const localStream = await navigator.mediaDevices.getUserMedia({
+            audio: true,
+            video: info.type === "video"
+          });
+
+          state.call.currentId = info.callId;
+          state.call.direction = "incoming";
+          state.call.localStream = localStream;
+          state.call.connected = false;
+          state.call.type = info.type;
+          callTitle.textContent = info.type === "video" ? "Видеозвонок" : "Голосовой звонок";
+          callSubtitle.textContent = `${contact.name} · подключение`;
+          callAvatar.src = contact.avatar;
+          callContactName.textContent = contact.name;
+          callTimer.textContent = "00:00";
+
+          await setupPeerConnection(callDocRef, "callee", localStream, info.type);
+          subscribeToCallDocument(callDocRef, "callee");
+
+          if (callData.offer) {
+            await state.call.peer.setRemoteDescription(new RTCSessionDescription(callData.offer));
+          }
+
+          const answer = await state.call.peer.createAnswer();
+          await state.call.peer.setLocalDescription(answer);
+
+          await updateDoc(callDocRef, {
+            answer: {
+              type: answer.type,
+              sdp: answer.sdp
+            },
+            status: "accepted",
+            acceptedAtMillis: Date.now()
+          });
+
+          await deleteDoc(doc(db, "users", currentUser.uid, "incomingCalls", info.callId));
+          hideIncomingCall();
+          openLayer(callLayer);
+          markCallConnected();
+        } catch (error) {
+          console.error(error);
+          setComposerHint("Не удалось принять звонок.", "error");
+        }
+      }
+
+      async function declineIncomingCall() {
+        const info = state.call.incoming;
+        const currentUser = auth.currentUser;
+        if (!info || !currentUser) {
+          return;
+        }
+
+        try {
+          await updateDoc(doc(db, "calls", info.callId), { status: "declined" });
+        } catch {
+          // Ignore if the call doc is already gone.
+        }
+
+        try {
+          await deleteDoc(doc(db, "users", currentUser.uid, "incomingCalls", info.callId));
+        } catch {
+          // Ignore.
+        }
+
+        hideIncomingCall();
+      }
+
+      function messageDirection(senderId) {
+        return senderId === state.profile.uid ? "outgoing" : "incoming";
       }
 
       function createMessageElement(message) {
+        const direction = messageDirection(message.senderId);
         const item = document.createElement("article");
-        item.className = `message message--${message.type}`;
+        item.className = `message message--${direction}`;
 
         const textLength = message.text?.length ?? 0;
         if (textLength < 24) {
@@ -1794,17 +2469,17 @@
           item.classList.add("message--wide");
         }
 
-        if (message.media) {
+        if (message.kind === "image" || message.kind === "video") {
           const media = document.createElement("div");
           media.className = "message__media";
-          if (message.media.kind === "image") {
+          if (message.kind === "image") {
             const image = document.createElement("img");
-            image.src = message.media.url;
-            image.alt = message.media.name || "Изображение";
+            image.src = message.mediaUrl;
+            image.alt = message.mediaName || "Фото";
             media.appendChild(image);
-          } else if (message.media.kind === "video") {
+          } else {
             const video = document.createElement("video");
-            video.src = message.media.url;
+            video.src = message.mediaUrl;
             video.controls = true;
             video.preload = "metadata";
             media.appendChild(video);
@@ -1812,19 +2487,32 @@
           item.appendChild(media);
         }
 
-        if (message.voice) {
+        if (message.kind === "voice") {
           const voice = document.createElement("div");
           voice.className = "message__voice";
-          voice.innerHTML = `
-            <svg viewBox="0 0 24 24" aria-hidden="true" width="18" height="18" style="fill:none;stroke:currentColor;stroke-width:1.8">
-              <path d="M12 4a3 3 0 0 1 3 3v4a3 3 0 1 1-6 0V7a3 3 0 0 1 3-3z"></path>
-              <path d="M6 10.5a6 6 0 0 0 12 0"></path>
-              <path d="M12 16.5V20"></path>
-              <path d="M9 20h6"></path>
-            </svg>
-            <div class="message__voice-bar"></div>
-            <span class="message__voice-time">${escapeHtml(message.voice.duration)}</span>
+
+          const icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+          icon.setAttribute("viewBox", "0 0 24 24");
+          icon.setAttribute("width", "18");
+          icon.setAttribute("height", "18");
+          icon.setAttribute("aria-hidden", "true");
+          icon.innerHTML = `
+            <path d="M12 4a3 3 0 0 1 3 3v4a3 3 0 1 1-6 0V7a3 3 0 0 1 3-3z" fill="none" stroke="currentColor" stroke-width="1.8"></path>
+            <path d="M6 10.5a6 6 0 0 0 12 0" fill="none" stroke="currentColor" stroke-width="1.8"></path>
+            <path d="M12 16.5V20" fill="none" stroke="currentColor" stroke-width="1.8"></path>
+            <path d="M9 20h6" fill="none" stroke="currentColor" stroke-width="1.8"></path>
           `;
+
+          const audio = document.createElement("audio");
+          audio.controls = true;
+          audio.preload = "metadata";
+          audio.src = message.mediaUrl;
+
+          const duration = document.createElement("span");
+          duration.className = "message__voice-time";
+          duration.textContent = message.duration || "00:00";
+
+          voice.append(icon, audio, duration);
           item.appendChild(voice);
         }
 
@@ -1837,9 +2525,8 @@
 
         const meta = document.createElement("div");
         meta.className = "message__meta";
-        meta.textContent = `${message.type === "outgoing" ? state.profile.name : state.contact?.name || "Собеседник"} • ${message.time}`;
+        meta.textContent = `${direction === "outgoing" ? state.profile.name : state.contact?.name || "Собеседник"} • ${getTimeLabel(message.createdAtMillis)}`;
         item.appendChild(meta);
-
         return item;
       }
 
@@ -1851,13 +2538,20 @@
           return;
         }
 
-        const list = ensureContactMessages(state.contact);
         const chip = document.createElement("div");
         chip.className = "date-chip";
         chip.textContent = getTodayLabel();
         messages.appendChild(chip);
 
-        list.forEach((message) => {
+        if (!state.chat.messages.length) {
+          const empty = document.createElement("div");
+          empty.className = "people-empty";
+          empty.textContent = "Чат пуст. Напиши первым.";
+          messages.appendChild(empty);
+          return;
+        }
+
+        state.chat.messages.forEach((message) => {
           messages.appendChild(createMessageElement(message));
         });
 
@@ -1867,25 +2561,30 @@
         });
       }
 
-      function appendMessage(message) {
-        if (!state.contact) {
+      function renderPeople() {
+        peopleList.innerHTML = "";
+        const term = peopleSearch.value.trim();
+
+        if (!term) {
+          const empty = document.createElement("div");
+          empty.className = "people-empty";
+          empty.textContent = "Список не показывается сам. Введи ник или имя человека.";
+          peopleList.appendChild(empty);
           return;
         }
 
-        const list = ensureContactMessages(state.contact);
-        list.push(message);
-        renderMessages();
-      }
-
-      function renderPeople() {
-        peopleList.innerHTML = "";
+        if (term.length < 2) {
+          const empty = document.createElement("div");
+          empty.className = "people-empty";
+          empty.textContent = "Введи хотя бы 2 символа.";
+          peopleList.appendChild(empty);
+          return;
+        }
 
         if (!state.people.length) {
           const empty = document.createElement("div");
           empty.className = "people-empty";
-          empty.textContent = peopleSearch.value.trim()
-            ? "Никого не найдено."
-            : "Пока тут пусто. Зарегистрируй еще один аккаунт, и он появится в поиске.";
+          empty.textContent = "Никого не найдено.";
           peopleList.appendChild(empty);
           return;
         }
@@ -1907,35 +2606,89 @@
             </div>
             <div>
               <p class="chat-card__time">${blocked ? "стоп" : "чат"}</p>
-              <span class="chat-card__badge">${blocked ? "!" : "1"}</span>
+              <span class="chat-card__badge">${blocked ? "!" : "•"}</span>
             </div>
           `;
-          button.addEventListener("click", () => selectContact(person));
+          button.addEventListener("click", () => {
+            setActiveContact(person).catch((error) => {
+              console.error(error);
+              setComposerHint("Не удалось открыть чат.", "error");
+            });
+          });
           peopleList.appendChild(button);
         });
       }
 
-      function selectContact(person) {
-        state.contact = {
-          uid: person.uid,
-          username: person.username,
-          name: person.name,
-          avatar: person.avatar || "LunaPhoto/image.png",
-          about: person.about || "без описания",
-          email: person.email || ""
-        };
+      function unsubscribeChat() {
+        if (state.chat.unsubscribe) {
+          state.chat.unsubscribe();
+          state.chat.unsubscribe = null;
+        }
+        state.chat.id = "";
+        state.chat.messages = [];
+      }
 
-        if (state.recording) {
-          state.recording = false;
-          recordButton.classList.remove("is-active");
+      function mapProfileData(item) {
+        return {
+          uid: item.uid,
+          username: item.username,
+          name: item.name,
+          avatar: item.avatar || "LunaPhoto/image.png",
+          about: item.about || "без описания",
+          email: item.email || ""
+        };
+      }
+
+      async function subscribeToChat(contact) {
+        const currentUser = auth.currentUser;
+        if (!currentUser || !contact) {
+          return;
         }
 
-        state.attachedFile = null;
-        fileInput.value = "";
+        unsubscribeChat();
+        const chatId = getChatId(currentUser.uid, contact.uid);
+        state.chat.id = chatId;
+
+        await setDoc(doc(db, "chats", chatId), {
+          members: [currentUser.uid, contact.uid],
+          memberKey: chatId,
+          updatedAtMillis: Date.now(),
+          createdBy: currentUser.uid
+        }, { merge: true });
+
+        const messagesRef = query(
+          collection(db, "chats", chatId, "messages"),
+          orderBy("createdAtMillis")
+        );
+
+        state.chat.unsubscribe = onSnapshot(messagesRef, (snapshot) => {
+          state.chat.messages = snapshot.docs.map((entry) => {
+            const data = entry.data();
+            return {
+              id: entry.id,
+              senderId: data.senderId,
+              text: data.text || "",
+              kind: data.kind || "text",
+              mediaUrl: data.mediaUrl || "",
+              mediaName: data.mediaName || "",
+              duration: data.duration || "",
+              createdAtMillis: data.createdAtMillis || Date.now()
+            };
+          });
+          renderMessages();
+        }, () => {
+          setComposerHint("Не удалось загрузить сообщения.", "error");
+        });
+      }
+
+      async function setActiveContact(person) {
+        state.contact = mapProfileData(person);
+        clearPendingMedia();
         syncHeader();
         syncContactProfile();
         applyComposerState();
         renderPeople();
+        await subscribeToChat(state.contact);
         renderMessages();
       }
 
@@ -1957,7 +2710,7 @@
           nameLower: name.trim().toLowerCase(),
           avatar: avatar || "LunaPhoto/image.png",
           about: about || "без описания",
-          updatedAt: new Date().toISOString()
+          updatedAtMillis: Date.now()
         };
       }
 
@@ -1979,14 +2732,13 @@
           if (usernameSnap.exists()) {
             throw new Error("username-taken");
           }
-
           transaction.set(usernameRef, {
             uid: user.uid,
             username
           });
           transaction.set(profileRef, {
             ...payload,
-            createdAt: new Date().toISOString()
+            createdAtMillis: Date.now()
           });
         });
       }
@@ -2020,7 +2772,7 @@
           }
           transaction.set(profileRef, {
             ...payload,
-            createdAt: new Date().toISOString()
+            createdAtMillis: Date.now()
           });
         });
 
@@ -2090,51 +2842,35 @@
           return;
         }
 
+        const normalized = normalizeUsername(term);
+        if (normalized.length < 2) {
+          state.people = [];
+          searchHint.textContent = term.trim()
+            ? "Введи хотя бы 2 символа."
+            : "Список пустой, пока ты ничего не ищешь.";
+          renderPeople();
+          return;
+        }
+
         const usersRef = collection(db, "users");
-        const normalized = term.trim().toLowerCase();
-        let items = [];
+        const [byUsername, byName] = await Promise.all([
+          getDocs(query(usersRef, orderBy("usernameLower"), startAt(normalized), endAt(`${normalized}\uf8ff`), limit(12))),
+          getDocs(query(usersRef, orderBy("nameLower"), startAt(normalized), endAt(`${normalized}\uf8ff`), limit(12)))
+        ]);
 
-        if (!normalized) {
-          const snapshot = await getDocs(query(usersRef, orderBy("nameLower"), limit(20)));
-          items = snapshot.docs.map((entry) => entry.data());
-        } else {
-          const [byUsername, byName] = await Promise.all([
-            getDocs(query(usersRef, orderBy("usernameLower"), startAt(normalized), endAt(`${normalized}\uf8ff`), limit(12))),
-            getDocs(query(usersRef, orderBy("nameLower"), startAt(normalized), endAt(`${normalized}\uf8ff`), limit(12)))
-          ]);
+        const merged = new Map();
+        [...byUsername.docs, ...byName.docs].forEach((entry) => {
+          merged.set(entry.id, entry.data());
+        });
 
-          const merged = new Map();
-          [...byUsername.docs, ...byName.docs].forEach((entry) => {
-            merged.set(entry.id, entry.data());
-          });
-          items = [...merged.values()];
-        }
-
-        state.people = items
+        state.people = [...merged.values()]
           .filter((item) => item.uid && item.uid !== auth.currentUser.uid)
-          .map((item) => ({
-            uid: item.uid,
-            username: item.username,
-            name: item.name,
-            avatar: item.avatar || "LunaPhoto/image.png",
-            about: item.about || "без описания",
-            email: item.email || ""
-          }));
+          .map((item) => mapProfileData(item));
 
-        searchHint.textContent = normalized
-          ? `Показаны результаты по запросу: ${term.trim()}`
-          : "Начни вводить ник или имя. Пока показываются найденные люди.";
-
+        searchHint.textContent = state.people.length
+          ? `Найдено: ${state.people.length}`
+          : "Никого не найдено.";
         renderPeople();
-
-        if (state.contact) {
-          const fresh = state.people.find((person) => person.uid === state.contact.uid);
-          if (fresh) {
-            state.contact = fresh;
-            syncHeader();
-            syncContactProfile();
-          }
-        }
       }
 
       async function handleRegister(event) {
@@ -2228,8 +2964,10 @@
             avatar: nextProfile.avatar,
             about: nextProfile.about
           }));
-          await loadPeople(peopleSearch.value);
-          setComposerHint("Профиль сохранен.", "good");
+          if (peopleSearch.value.trim()) {
+            await loadPeople(peopleSearch.value);
+          }
+          setComposerHint("Профиль сохранён.", "good");
           closeLayer(settingsLayer);
         } catch (error) {
           const message = error instanceof Error && error.message === "username-taken"
@@ -2265,113 +3003,136 @@
         applyComposerState();
         renderPeople();
 
-        if (state.blockedUsers.has(state.contact.uid) && callLayer.classList.contains("is-open")) {
-          closeLayer(callLayer);
-          stopCallTimer();
+        if (state.blockedUsers.has(state.contact.uid) && state.call.currentId) {
+          endCurrentCall({
+            updateRemote: true,
+            message: `Вы заблокировали ${state.contact.name}.`
+          }).catch(console.error);
         }
       }
 
       function attachSelectedFile(file) {
         if (!file) {
+          revokeAttachedPreview();
           state.attachedFile = null;
           applyComposerState();
           return;
         }
 
-        const type = file.type.startsWith("image/")
+        const kind = file.type.startsWith("image/")
           ? "image"
           : file.type.startsWith("video/")
             ? "video"
-            : "file";
+            : "";
 
+        if (!kind) {
+          setComposerHint("Сейчас можно отправлять только фото и видео.", "error");
+          return;
+        }
+
+        revokeAttachedPreview();
+        state.pendingVoice = null;
         state.attachedFile = {
           file,
-          kind: type,
-          url: type === "file" ? "" : URL.createObjectURL(file)
+          kind,
+          previewUrl: URL.createObjectURL(file)
         };
         applyComposerState();
       }
 
-      function handleRecordToggle() {
+      async function startVoiceRecording() {
+        if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
+          setComposerHint("Браузер не поддерживает запись голосовых.", "error");
+          return;
+        }
+
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          state.recordingStream = stream;
+          state.recordChunks = [];
+          state.pendingVoice = null;
+          revokeAttachedPreview();
+          state.attachedFile = null;
+
+          const recorder = new MediaRecorder(stream);
+          state.mediaRecorder = recorder;
+          state.recording = true;
+          state.recordStartedAt = Date.now();
+          recordButton.classList.add("is-active");
+          applyComposerState();
+
+          recorder.ondataavailable = (event) => {
+            if (event.data?.size) {
+              state.recordChunks.push(event.data);
+            }
+          };
+
+          recorder.onstop = () => {
+            const seconds = Math.max(1, Math.round((Date.now() - state.recordStartedAt) / 1000));
+            const blob = new Blob(state.recordChunks, {
+              type: recorder.mimeType || "audio/webm"
+            });
+
+            state.pendingVoice = {
+              blob,
+              duration: formatDuration(seconds)
+            };
+            state.recording = false;
+            state.mediaRecorder = null;
+            state.recordChunks = [];
+            state.recordingStream?.getTracks().forEach((track) => track.stop());
+            state.recordingStream = null;
+            recordButton.classList.remove("is-active");
+            applyComposerState();
+          };
+
+          recorder.start();
+        } catch (error) {
+          console.error(error);
+          setComposerHint("Не удалось начать запись голосового.", "error");
+        }
+      }
+
+      function stopVoiceRecording() {
+        if (state.mediaRecorder && state.recording) {
+          state.mediaRecorder.stop();
+        }
+      }
+
+      async function handleRecordToggle() {
         if (!state.contact || state.blockedUsers.has(state.contact.uid)) {
           return;
         }
 
-        state.recording = !state.recording;
         if (state.recording) {
-          state.recordStartedAt = Date.now();
-          recordButton.classList.add("is-active");
-        } else {
-          recordButton.classList.remove("is-active");
-        }
-        applyComposerState();
-      }
-
-      function sendIncomingTestReply() {
-        if (!state.contact) {
+          stopVoiceRecording();
           return;
         }
 
-        const currentUid = state.contact.uid;
-        window.setTimeout(() => {
-          if (!state.contact || state.contact.uid !== currentUid) {
-            return;
-          }
+        await startVoiceRecording();
+      }
 
-          appendMessage({
-            type: "incoming",
-            text: "TEST",
-            time: getTime()
+      async function uploadFileWithProgress(storagePath, file, progressText) {
+        const uploadRef = ref(storage, storagePath);
+        return new Promise((resolve, reject) => {
+          const task = uploadBytesResumable(uploadRef, file, {
+            contentType: file.type || undefined
           });
-        }, 320);
+
+          task.on("state_changed", (snapshot) => {
+            const percent = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+            setComposerHint(`${progressText}: ${percent}%`);
+          }, reject, async () => {
+            const url = await getDownloadURL(task.snapshot.ref);
+            resolve({
+              url,
+              path: storagePath
+            });
+          });
+        });
       }
 
-      function buildOutgoingPayload() {
-        const text = messageInput.value.trim();
-        const outgoing = {
-          type: "outgoing",
-          text,
-          time: getTime()
-        };
-
-        if (state.attachedFile) {
-          outgoing.media = {
-            kind: state.attachedFile.kind,
-            name: state.attachedFile.file.name,
-            url: state.attachedFile.url
-          };
-          if (!text) {
-            outgoing.text = state.attachedFile.file.name;
-          }
-        }
-
-        if (state.recording) {
-          const seconds = Math.max(1, Math.round((Date.now() - state.recordStartedAt) / 1000));
-          outgoing.voice = {
-            duration: formatDuration(seconds)
-          };
-          if (!outgoing.text) {
-            outgoing.text = "Голосовое сообщение";
-          }
-        }
-
-        return outgoing;
-      }
-
-      function resetComposerAfterSend() {
-        messageInput.value = "";
-        if (state.attachedFile?.url) {
-          URL.revokeObjectURL(state.attachedFile.url);
-        }
-        state.attachedFile = null;
-        fileInput.value = "";
-        state.recording = false;
-        recordButton.classList.remove("is-active");
-        applyComposerState();
-        messageInput.focus();
-      }
-
-      function handleComposerSubmit(event) {
+      async function sendCurrentMessage(event) {
         event.preventDefault();
 
         if (!state.contact) {
@@ -2384,15 +3145,77 @@
           return;
         }
 
-        const payload = buildOutgoingPayload();
-        if (!payload.text && !payload.media && !payload.voice) {
+        if (!state.chat.id) {
+          setComposerHint("Чат ещё не готов. Подожди секунду.", "error");
+          return;
+        }
+
+        const text = messageInput.value.trim();
+        if (!text && !state.attachedFile && !state.pendingVoice) {
           messageInput.focus();
           return;
         }
 
-        appendMessage(payload);
-        resetComposerAfterSend();
-        sendIncomingTestReply();
+        sendButton.disabled = true;
+        try {
+          const createdAtMillis = Date.now();
+          const payload = {
+            senderId: state.profile.uid,
+            receiverId: state.contact.uid,
+            senderName: state.profile.name,
+            text,
+            kind: "text",
+            mediaUrl: "",
+            mediaName: "",
+            duration: "",
+            createdAtMillis
+          };
+
+          if (state.attachedFile) {
+            const file = state.attachedFile.file;
+            const storagePath = `chat-media/${state.chat.id}/${createdAtMillis}-${sanitizeFileName(file.name)}`;
+            const uploadResult = await uploadFileWithProgress(storagePath, file, "Загружаю файл");
+            payload.kind = state.attachedFile.kind;
+            payload.mediaUrl = uploadResult.url;
+            payload.mediaName = file.name;
+            if (!payload.text) {
+              payload.text = file.name;
+            }
+          }
+
+          if (state.pendingVoice) {
+            const voiceFile = new File([state.pendingVoice.blob], `voice-${createdAtMillis}.webm`, {
+              type: state.pendingVoice.blob.type || "audio/webm"
+            });
+            const storagePath = `voice/${state.chat.id}/${voiceFile.name}`;
+            const uploadResult = await uploadFileWithProgress(storagePath, voiceFile, "Загружаю голосовое");
+            payload.kind = "voice";
+            payload.mediaUrl = uploadResult.url;
+            payload.mediaName = voiceFile.name;
+            payload.duration = state.pendingVoice.duration;
+            if (!payload.text) {
+              payload.text = "Голосовое сообщение";
+            }
+          }
+
+          await addDoc(collection(db, "chats", state.chat.id, "messages"), payload);
+          await setDoc(doc(db, "chats", state.chat.id), {
+            members: [state.profile.uid, state.contact.uid],
+            memberKey: state.chat.id,
+            lastMessage: payload.text || payload.mediaName || "Медиа",
+            updatedAtMillis: createdAtMillis
+          }, { merge: true });
+
+          messageInput.value = "";
+          clearPendingMedia();
+          applyComposerState();
+          messageInput.focus();
+        } catch (error) {
+          console.error(error);
+          setComposerHint("Не удалось отправить. Проверь Firestore и Storage.", "error");
+        } finally {
+          sendButton.disabled = false;
+        }
       }
 
       async function bootSession(user) {
@@ -2400,26 +3223,47 @@
         applyOwnProfile(profile);
         authScreen.classList.add("hidden");
         appShell.classList.remove("hidden");
-        setComposerHint("Загружаю людей...");
         state.contact = null;
+        unsubscribeChat();
         syncHeader();
         syncContactProfile();
-        applyComposerState();
+        renderPeople();
         renderMessages();
-        await loadPeople("");
-        setComposerHint("Выбери человека слева.");
+        applyComposerState();
+        await subscribeToIncomingCalls(user.uid);
+        setComposerHint("Ищи человека по нику или имени.");
       }
 
       function teardownSession() {
+        unsubscribeChat();
+        cleanupCallListeners();
+        stopCallTimer();
+
+        if (state.call.incomingUnsubscribe) {
+          state.call.incomingUnsubscribe();
+          state.call.incomingUnsubscribe = null;
+        }
+
+        state.call.localStream?.getTracks().forEach((track) => track.stop());
+        state.call.remoteStream?.getTracks().forEach((track) => track.stop());
         state.contact = null;
         state.people = [];
-        state.messagesByUser = {};
+        state.chat.messages = [];
+        state.call.currentId = "";
+        state.call.peer = null;
+        state.call.localStream = null;
+        state.call.remoteStream = null;
+        state.call.incoming = null;
+        clearPendingMedia();
+        hideIncomingCall();
+        resetCallMediaElements();
         peopleSearch.value = "";
-        peopleList.innerHTML = "";
         authScreen.classList.remove("hidden");
         appShell.classList.add("hidden");
+        syncHeader();
+        syncContactProfile();
+        renderPeople();
         renderMessages();
-        stopCallTimer();
       }
 
       authTabs.forEach((tab) => {
@@ -2462,8 +3306,25 @@
         }
       });
 
-      startCallButton.addEventListener("click", () => openCall("voice"));
-      startVideoButton.addEventListener("click", () => openCall("video"));
+      startCallButton.addEventListener("click", () => {
+        startOutgoingCall("voice").catch(console.error);
+      });
+      startVideoButton.addEventListener("click", () => {
+        startOutgoingCall("video").catch(console.error);
+      });
+      acceptCallButton.addEventListener("click", () => {
+        acceptIncomingCall().catch(console.error);
+      });
+      declineCallButton.addEventListener("click", () => {
+        declineIncomingCall().catch(console.error);
+      });
+      endCallButton.addEventListener("click", () => {
+        endCurrentCall({
+          updateRemote: true,
+          message: "Звонок завершён."
+        }).catch(console.error);
+      });
+
       openContactAvatar.addEventListener("click", openContact);
       toggleContactBlock.addEventListener("click", toggleBlockCurrentContact);
 
@@ -2477,14 +3338,16 @@
         syncCallControls();
       });
 
-      callInputDevice.addEventListener("change", () => {
+      callInputDevice.addEventListener("change", async () => {
         state.devices.input = callInputDevice.value;
         settingsInputDevice.value = state.devices.input;
+        await switchActiveMicrophone(state.devices.input);
       });
 
-      callOutputDevice.addEventListener("change", () => {
+      callOutputDevice.addEventListener("change", async () => {
         state.devices.output = callOutputDevice.value;
         settingsOutputDevice.value = state.devices.output;
+        await applyOutputDevice();
       });
 
       settingsInputDevice.addEventListener("change", () => {
@@ -2492,22 +3355,28 @@
         callInputDevice.value = state.devices.input;
       });
 
-      settingsOutputDevice.addEventListener("change", () => {
+      settingsOutputDevice.addEventListener("change", async () => {
         state.devices.output = settingsOutputDevice.value;
         callOutputDevice.value = state.devices.output;
+        await applyOutputDevice();
       });
 
       remoteVolume.addEventListener("input", () => {
         state.call.remoteVolume = Number(remoteVolume.value);
         remoteVolumeValue.textContent = `${state.call.remoteVolume}%`;
+        applyRemoteVolume();
       });
 
       outputVolume.addEventListener("input", () => {
         state.call.outputVolume = Number(outputVolume.value);
         outputVolumeValue.textContent = `${state.call.outputVolume}%`;
+        applyRemoteVolume();
       });
 
-      recordButton.addEventListener("click", handleRecordToggle);
+      recordButton.addEventListener("click", () => {
+        handleRecordToggle().catch(console.error);
+      });
+
       attachButton.addEventListener("click", () => {
         if (!state.contact || state.blockedUsers.has(state.contact.uid)) {
           return;
@@ -2519,7 +3388,9 @@
         attachSelectedFile(fileInput.files?.[0] || null);
       });
 
-      composer.addEventListener("submit", handleComposerSubmit);
+      composer.addEventListener("submit", (event) => {
+        sendCurrentMessage(event).catch(console.error);
+      });
 
       peopleSearch.addEventListener("input", () => {
         window.clearTimeout(state.searchTimer);
@@ -2536,22 +3407,34 @@
           if (!layer) {
             return;
           }
+
           if (layer === callLayer) {
-            stopCallTimer();
+            endCurrentCall({
+              updateRemote: true,
+              message: "Звонок завершён."
+            }).catch(console.error);
+            return;
           }
+
           closeLayer(layer);
         });
       });
 
-      [settingsLayer, callLayer, contactLayer].forEach((layer) => {
+      [settingsLayer, contactLayer].forEach((layer) => {
         layer.addEventListener("click", (event) => {
           if (event.target === layer) {
-            if (layer === callLayer) {
-              stopCallTimer();
-            }
             closeLayer(layer);
           }
         });
+      });
+
+      callLayer.addEventListener("click", (event) => {
+        if (event.target === callLayer) {
+          endCurrentCall({
+            updateRemote: true,
+            message: "Звонок завершён."
+          }).catch(console.error);
+        }
       });
 
       syncProfilePreview();
@@ -2559,8 +3442,9 @@
       syncCallControls();
       syncHeader();
       syncContactProfile();
-      applyComposerState();
+      renderPeople();
       renderMessages();
+      applyComposerState();
 
       onAuthStateChanged(auth, async (user) => {
         if (!user) {
@@ -2574,7 +3458,7 @@
           setAuthHint("Вход выполнен.", "good");
         } catch (error) {
           console.error(error);
-          setAuthHint("Не удалось загрузить профиль. Проверь Firestore и правила доступа.", "error");
+          setAuthHint("Не удалось загрузить профиль. Проверь Firestore, Storage и правила доступа.", "error");
         }
       });
     </script>
